@@ -13,7 +13,7 @@
 [submodule "meta-rv110x"]
 	path = meta-rv110x
 	url = git@github.com:RamasyaR/meta-rv110x
-	branch = walnascar
+	branch = wrynose
 [submodule "openembedded-core"]
 	path = openembedded-core
 	url = https://git.openembedded.org/openembedded-core
