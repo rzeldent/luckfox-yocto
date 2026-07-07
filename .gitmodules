@@ -1,20 +1,24 @@
-[submodule "poky"]
-	path = poky
-	url = git://git.yoctoproject.org/poky.git
-	branch = walnascar
 [submodule "meta-openembedded"]
 	path = meta-openembedded
-	url = git://git.openembedded.org/meta-openembedded
-	branch = walnascar
+	url = https://git.openembedded.org/meta-openembedded
+	branch = wrynose
 [submodule "meta-arm"]
 	path = meta-arm
-	url = git://git.yoctoproject.org/meta-arm
-	branch = walnascar
+	url = https://git.yoctoproject.org/meta-arm
+	branch = wrynose
 [submodule "meta-rockchip"]
 	path = meta-rockchip
-	url = git://git.yoctoproject.org/meta-rockchip
-	branch = walnascar
+	url = https://git.yoctoproject.org/meta-rockchip
+	branch = wrynose
 [submodule "meta-rv110x"]
 	path = meta-rv110x
 	url = git@github.com:RamasyaR/meta-rv110x
 	branch = walnascar
+[submodule "openembedded-core"]
+	path = openembedded-core
+	url = https://git.openembedded.org/openembedded-core
+	branch = wrynose
+[submodule "bitbake"]
+	path = bitbake
+	url = https://git.openembedded.org/bitbake
+	branch = 2.18
