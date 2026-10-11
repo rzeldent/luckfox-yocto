@@ -22,3 +22,6 @@
 	path = bitbake
 	url = https://git.openembedded.org/bitbake
 	branch = 2.18
+[submodule "meta-mono"]
+	path = meta-mono
+	url = https://github.com/DynamicDevices/meta-mono.git
