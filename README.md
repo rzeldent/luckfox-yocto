@@ -25,3 +25,13 @@ This is an example and starting point for working with the [meta-rv110x](https:/
     - SDCARD: Use `bmaptool` to copy the generated .wic file to the SD card
     - NAND: [Tutorial here](/flash_spi_nand.md)
 8. Boot your device
+
+
+
+
+sudo bmaptool copy ./build/tmp/deploy/images/luckfox-pico-mini/core-image-base-luckfox-pico-mini.rootfs.wic /dev/sda
+
+password root: password
+
+
+use fastfetch for linux overview
