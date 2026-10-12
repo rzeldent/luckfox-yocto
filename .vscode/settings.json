@@ -18,21 +18,59 @@
     "bitbake.parseOnSave": false,
     "bitbake.buildConfigurations": [
         {
-            "name": "Luckfox Pico Mini SDCARD",
+            "name": "Luckfox Pico SDCARD",
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
-                "MACHINE": "luckfox-pico-mini",
+                "MACHINE": "luckfox-pico",
                 "DISTRO": "luckfox",
             }
         },
         {
-            "name": "Luckfox Pico Mini NAND",
+            "name": "Luckfox Pico Plus SDCARD",
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
-                "MACHINE": "luckfox-pico-mini",
+                "MACHINE": "luckfox-pico-plus",
                 "DISTRO": "luckfox",
-                "BB_ENV_PASSTHROUGH_ADDITIONS": "${BB_ENV_PASSTHROUGH_ADDITIONS} RV_SPI_NAND_STORAGE",
-                "RV_SPI_NAND_STORAGE": "1"
+            }
+        },
+        {
+            "name": "Luckfox Pico Plus SPI NAND",
+            "pathToBuildFolder": "${workspaceFolder}/build",
+            "shellEnv": {
+                "MACHINE": "luckfox-pico-plus-spi-nand",
+                "DISTRO": "luckfox",
+            }
+        },
+        {
+            "name": "Luckfox Pico Max SDCARD",
+            "pathToBuildFolder": "${workspaceFolder}/build",
+            "shellEnv": {
+                "MACHINE": "luckfox-pico-max",
+                "DISTRO": "luckfox",
+            }
+        },
+        {
+            "name": "Luckfox Pico Max SPI NAND",
+            "pathToBuildFolder": "${workspaceFolder}/build",
+            "shellEnv": {
+                "MACHINE": "luckfox-pico-max-spi-nand",
+                "DISTRO": "luckfox",
+            }
+        },
+        {
+            "name": "Luckfox Pico Mini A SDCARD",
+            "pathToBuildFolder": "${workspaceFolder}/build",
+            "shellEnv": {
+                "MACHINE": "luckfox-pico-mini-a",
+                "DISTRO": "luckfox",
+            }
+        },
+        {
+            "name": "Luckfox Pico Mini B SPI NAND",
+            "pathToBuildFolder": "${workspaceFolder}/build",
+            "shellEnv": {
+                "MACHINE": "luckfox-pico-mini-b",
+                "DISTRO": "luckfox",
             }
         }
     ],

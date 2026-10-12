@@ -36,6 +36,3 @@ password root: password
 
 use fastfetch for linux overview
 
-
-command 'nandwrite' not found, but can be installed with:
-sudo apt install mtd-utils
