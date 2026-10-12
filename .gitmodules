@@ -12,7 +12,7 @@
 	branch = wrynose
 [submodule "meta-rv110x"]
 	path = meta-rv110x
-	url = https://github.com/RamasyaR/meta-rv110x
+	url = https://github.com/rzeldent/meta-rv110x
 	branch = wrynose
 [submodule "openembedded-core"]
 	path = openembedded-core
