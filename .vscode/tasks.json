@@ -24,6 +24,50 @@
                 "kind": "build",
                 "isDefault": true
             }
+        },
+        {
+            "label": "Flash SD card (bmaptool)",
+            "type": "shell",
+            "command": "sudo ${workspaceFolder}/flash_sd.sh --machine ${input:machine} --device ${input:device}",
+            "problemMatcher": []
+        },
+        {
+            "label": "Flash SPI NAND (upgrade_tool)",
+            "type": "shell",
+            "command": "sudo ${workspaceFolder}/flash_spi_nand.sh --deploy-dir ${workspaceFolder}/build/tmp/deploy/images/${input:nandMachine}",
+            "problemMatcher": []
+        }
+    ],
+    "inputs": [
+        {
+            "id": "machine",
+            "type": "pickString",
+            "description": "Machine whose SD card image to flash",
+            "options": [
+                "luckfox-pico",
+                "luckfox-pico-plus",
+                "luckfox-pico-max",
+                "luckfox-pico-mini-a"
+            ],
+            "default": "luckfox-pico-max"
+        },
+        {
+            "id": "device",
+            "type": "promptString",
+            "description": "SD card device (check with 'lsblk' first, e.g. /dev/sdb)",
+            "default": "/dev/sdb"
+        },
+        {
+            "id": "nandMachine",
+            "type": "pickString",
+            "description": "Machine whose SPI NAND image to flash",
+            "options": [
+                "luckfox-pico-spi-nand",
+                "luckfox-pico-plus-spi-nand",
+                "luckfox-pico-max-spi-nand",
+                "luckfox-pico-mini-b"
+            ],
+            "default": "luckfox-pico-mini-b"
         }
     ]
 }

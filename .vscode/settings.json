@@ -26,6 +26,14 @@
             }
         },
         {
+            "name": "Luckfox Pico SPI NAND",
+            "pathToBuildFolder": "${workspaceFolder}/build",
+            "shellEnv": {
+                "MACHINE": "luckfox-pico-spi-nand",
+                "DISTRO": "luckfox",
+            }
+        },
+        {
             "name": "Luckfox Pico Plus SDCARD",
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
