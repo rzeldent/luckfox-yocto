@@ -47,7 +47,8 @@
                 "luckfox-pico",
                 "luckfox-pico-plus",
                 "luckfox-pico-max",
-                "luckfox-pico-mini-a"
+                "luckfox-pico-mini-a",
+                "luckfox-pico-mini-b"
             ],
             "default": "luckfox-pico-max"
         },

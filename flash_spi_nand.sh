@@ -33,7 +33,7 @@ TOOL_BIN="upgrade_tool"
 # rkbin/ are rejected by this chip ("wrong hash of loader").
 LOADER="${LOADER:-/home/rene/repos/luckfox-pico/output/image/download.bin}"
 
-DEPLOY_DIR="${DEPLOY_DIR:-$SCRIPT_DIR/build/tmp/deploy/images/luckfox-pico-mini}"
+DEPLOY_DIR="${DEPLOY_DIR:-$SCRIPT_DIR/build/tmp/deploy/images/luckfox-pico-mini-b-spi-nand}"
 
 IDBLOADER_FILE=""
 UBOOT_FILE=""
@@ -90,7 +90,7 @@ Options:
 Examples:
   sudo $0
   sudo $0 --erase
-  sudo $0 -r build/tmp/deploy/images/luckfox-pico-mini/core-image-base-luckfox-pico-mini.rootfs.ubi
+  sudo $0 --deploy-dir build/tmp/deploy/images/luckfox-pico-mini-b-spi-nand
 EOF
 }
 
