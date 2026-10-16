@@ -37,13 +37,11 @@ so the full capacity of the card is usable.
 1. Install vscode
 2. Install extensions
 3. Clone and open this repo in vscode
-4. Select MACHINE using the button in the bottom right corner of the vscode window<br />
-![plot](files/img/select_machine.png)
-5. Build a basic/minimal image using the buttons in the bottom left corner of the vscode window<br />
-![plot](files/img/build_buttons.png)
+4. Select MACHINE using the button in the bottom right corner of the vscode window
+5. Build a basic/minimal image using the buttons in the bottom left corner of the vscode window
 6. Find the build result in the `build/tmp/deploy/images/<machine>` directory
 7. Flash the image
-    - SDCARD: run the **Flash SD card (bmaptool)** task, or use the helper script
+    - SDCARD: run the **Write SD card (bmaptool)** task, or use the helper script
     - NAND: run the **Flash SPI NAND (upgrade_tool)** task, or see the [tutorial](/flash_spi_nand.md)
 8. Boot your device
 
