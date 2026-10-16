@@ -77,7 +77,7 @@
             "name": "Luckfox Pico Mini B SDCARD",
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
-                "MACHINE": "luckfox-pico-mini-b",
+                "MACHINE": "luckfox-pico-mini-b-sdcard",
                 "DISTRO": "luckfox",
             }
         },

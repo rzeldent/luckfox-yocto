@@ -39,10 +39,12 @@ IDBLOADER_FILE=""
 UBOOT_FILE=""
 ROOTFS_FILE=""
 
-# Partition offsets in 512-byte sectors.
-SPL_OFFSET=0x0
-UBOOT_OFFSET=0x20000
-ROOTFS_OFFSET=0x120000
+# Partition offsets. U-Boot's mtdparts is byte-based
+# (mtdparts=spi0.0:128k(spl),1m(uboot),-(rootfs)), but upgrade_tool's WL/EL
+# take 512-byte sector numbers, so convert.
+SPL_OFFSET=$((0x000000 / 512))     # byte 0x000000
+UBOOT_OFFSET=$((0x020000 / 512))   # byte 0x020000
+ROOTFS_OFFSET=$((0x120000 / 512))  # byte 0x120000
 
 ERASE_FIRST=false
 ASSUME_YES=false
@@ -120,11 +122,11 @@ parse_args() {
 # Discovery / validation
 # ---------------------------------------------------------------------------
 
-# newest_match <glob> -> prints the most recently modified match
+# newest_match <glob> -> prints the most recently modified match, or nothing
 newest_match() {
     local pattern="$1"
     # shellcheck disable=SC2086
-    ls -1t $pattern 2>/dev/null | head -n 1
+    ls -1t $pattern 2>/dev/null | head -n 1 || true
 }
 
 discover_images() {
@@ -272,24 +274,28 @@ main() {
         sleep 2
     fi
 
-    # --- SPL -----------------------------------------------------------------
+    # --- DownloadBoot once ---------------------------------------------------
+    # The device stays in loader mode for the whole session, so all three writes
+    # belong here: the vendor's own rkdownload.sh does a single `db` followed by
+    # every `wl`. Re-issuing DB per write fails, because as soon as a valid IDB
+    # is in the flash the BROM boots it instead of waiting in MaskROM, and DB
+    # can only attach to a device still sitting in MaskROM.
     enter_loader_mode
-    write_image "$SPL_OFFSET" "$IDBLOADER_FILE"
-    log_ok "SPL written"
 
-    # The device drops back to MaskROM after every write, so re-arm the loader.
-    sleep 2
-    enter_loader_mode
+    # --- Root filesystem -----------------------------------------------------
+    # The IDB/SPL goes last on purpose: it is the thing that makes the BROM boot
+    # from the flash, so if an earlier write fails the board still comes up in
+    # MaskROM rather than looping on an incomplete image.
+    write_image "$ROOTFS_OFFSET" "$ROOTFS_FILE" "$rootfs_sectors"
+    log_ok "Root filesystem written"
 
     # --- U-Boot --------------------------------------------------------------
     write_image "$UBOOT_OFFSET" "$UBOOT_FILE"
     log_ok "U-Boot written"
 
-    # --- Root filesystem -----------------------------------------------------
-    sleep 2
-    enter_loader_mode
-    write_image "$ROOTFS_OFFSET" "$ROOTFS_FILE" "$rootfs_sectors"
-    log_ok "Root filesystem written"
+    # --- SPL / IDB -----------------------------------------------------------
+    write_image "$SPL_OFFSET" "$IDBLOADER_FILE"
+    log_ok "SPL written"
 
     # --- Reset ---------------------------------------------------------------
     log_info "Resetting the device..."

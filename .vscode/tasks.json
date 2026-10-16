@@ -26,7 +26,7 @@
             }
         },
         {
-            "label": "Flash SD card (bmaptool)",
+            "label": "Write SD card (bmaptool)",
             "type": "shell",
             "command": "sudo ${workspaceFolder}/flash_sd.sh --machine ${input:machine} --device ${input:device}",
             "problemMatcher": []
@@ -48,7 +48,8 @@
                 "luckfox-pico-plus",
                 "luckfox-pico-max",
                 "luckfox-pico-mini-a",
-                "luckfox-pico-mini-b"
+                "luckfox-pico-mini-b",
+                "luckfox-pico-mini-b-sdcard"
             ],
             "default": "luckfox-pico-max"
         },
@@ -66,9 +67,9 @@
                 "luckfox-pico-spi-nand",
                 "luckfox-pico-plus-spi-nand",
                 "luckfox-pico-max-spi-nand",
-                "luckfox-pico-mini-b"
+                "luckfox-pico-mini-b-spi-nand"
             ],
-            "default": "luckfox-pico-mini-b"
+            "default": "luckfox-pico-mini-b-spi-nand"
         }
     ]
 }

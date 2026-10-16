@@ -86,4 +86,17 @@ before deploying anywhere it matters.
 
 `fastfetch` is included for a Linux overview.
 
+## Erase NAND
 
+With the board booted from SD and the SPI NAND visible as a raw MTD device,
+erase it from the target. Wiping the IDB this way is what makes the board fall
+back into MaskROM (USB download) mode on the next power-up, which is the way
+back when `flash_spi_nand.sh` fails part-way and leaves the flash holding a
+bootable-looking, incomplete image.
+
+```
+ubidetach -m 0 2>/dev/null || true     # detach UBI first if it's attached
+flash_erase -N /dev/mtd0 0 0           # whole chip, don't skip bad blocks
+```
+
+From the U-Boot console instead: `mtd erase.dontskipbad spi-nand0`.
