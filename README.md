@@ -38,37 +38,13 @@ so the full capacity of the card is usable.
 2. Install extensions
 3. Clone and open this repo in vscode
 4. Select MACHINE using the button in the bottom right corner of the vscode window
-5. Build a basic/minimal image using the buttons in the bottom left corner of the vscode window
+5. Build a basic/minimal image using the task **Ctrl/Shift/P**, Run Task and select **build core-image-minimal**
 6. Find the build result in the `build/tmp/deploy/images/<machine>` directory
 7. Flash the image
-    - SDCARD: run the **Write SD card (bmaptool)** task, or use the helper script
-    - NAND: run the **Flash SPI NAND (upgrade_tool)** task, or see the [tutorial](/flash_spi_nand.md)
+    - SDCARD: **Ctrl/Shift/P**, Run Task and select **Write SD card**
+    - NAND: **Ctrl/Shift/P**, Run Task and select **Flash SPI NAND**
 8. Boot your device
 
-## Flashing
-
-Two helper scripts are provided, and both are also available as vscode tasks
-(**Terminal → Run Task…**).
-
-### SD card
-
-```
-sudo ./flash_sd.sh -m luckfox-pico-max -D /dev/sdb
-```
-
-The equivalent manual command is:
-
-```
-sudo bmaptool copy ./build/tmp/deploy/images/luckfox-pico-max/core-image-base-luckfox-pico-max.rootfs.wic /dev/sdb
-```
-
-### SPI NAND
-
-```
-sudo ./flash_spi_nand.sh --deploy-dir ./build/tmp/deploy/images/luckfox-pico-mini-b-spi-nand
-```
-
-Run either script with `--help` for all options.
 
 ## Logging in
 
