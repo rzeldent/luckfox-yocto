@@ -12,6 +12,12 @@
 #   0x020000  uboot   u-boot-spi-nand-*.img          (1 MiB)
 #   0x120000  rootfs  core-image-*.rootfs-*.ubi      (rest of the NAND)
 #
+# The whole flash is erased before anything is written. A .ubi is normally
+# smaller than its partition, and UBI refuses to attach if any PEB still holds
+# another image's sequence number, so writing over an existing image without
+# erasing leaves a stale tail that only shows up much later, as
+# "bad image sequence number" during boot.
+#
 # Usage: sudo ./flash_spi_nand.sh [OPTIONS]
 #
 # Run with --help for the full option list.
@@ -46,7 +52,7 @@ SPL_OFFSET=$((0x000000 / 512))     # byte 0x000000
 UBOOT_OFFSET=$((0x020000 / 512))   # byte 0x020000
 ROOTFS_OFFSET=$((0x120000 / 512))  # byte 0x120000
 
-ERASE_FIRST=false
+ERASE_FIRST=true
 ASSUME_YES=false
 DRY_RUN=false
 
@@ -84,14 +90,16 @@ Options:
   -i, --idbloader FILE   SPL image (default: auto-detected in deploy dir)
   -u, --uboot FILE       U-Boot image (default: auto-detected in deploy dir)
   -r, --rootfs FILE      Root filesystem .ubi (default: auto-detected)
-  -e, --erase            Erase the whole flash before writing
+  -e, --erase            Erase the whole flash before writing (default)
+      --no-erase         Skip the erase; only safe when the .ubi fills the
+                         whole rootfs partition
   -y, --yes              Do not ask for confirmation
   -n, --dry-run          Print the commands without executing them
   -h, --help             Show this help
 
 Examples:
   sudo $0
-  sudo $0 --erase
+  sudo $0 --no-erase
   sudo $0 --deploy-dir build/tmp/deploy/images/luckfox-pico-mini-b-spi-nand
 EOF
 }
@@ -110,6 +118,7 @@ parse_args() {
             -u|--uboot)      UBOOT_FILE="$2"; shift 2 ;;
             -r|--rootfs)     ROOTFS_FILE="$2"; shift 2 ;;
             -e|--erase)      ERASE_FIRST=true; shift ;;
+            --no-erase)      ERASE_FIRST=false; shift ;;
             -y|--yes)        ASSUME_YES=true; shift ;;
             -n|--dry-run)    DRY_RUN=true; shift ;;
             -h|--help)       usage; exit 0 ;;
@@ -127,6 +136,11 @@ newest_match() {
     local pattern="$1"
     # shellcheck disable=SC2086
     ls -1t $pattern 2>/dev/null | head -n 1 || true
+}
+
+# has_magic <file> <magic> -- true when the file starts with the given magic
+has_magic() {
+    [[ "$(head -c ${#2} "$1" 2>/dev/null)" == "$2" ]]
 }
 
 discover_images() {
@@ -152,6 +166,14 @@ discover_images() {
     for f in "$IDBLOADER_FILE" "$UBOOT_FILE" "$ROOTFS_FILE" "$LOADER"; do
         [[ -f "$f" ]] || die "File not found: $f"
     done
+
+    # A wrong file here produces a board that neither boots nor explains why:
+    # a non-IDB at offset 0 is not bootable, and a non-UBI image in the rootfs
+    # partition makes UBI fail to attach.
+    has_magic "$IDBLOADER_FILE" "RKNS" \
+        || die "$(basename "$IDBLOADER_FILE") is not a RockChip IDB (no RKNS magic)"
+    has_magic "$ROOTFS_FILE" "UBI#" \
+        || die "$(basename "$ROOTFS_FILE") is not a UBI image (no UBI# magic)"
 
     [[ -x "$TOOL_DIR/$TOOL_BIN" ]] || die "$TOOL_DIR/$TOOL_BIN not found or not executable"
 }
@@ -261,17 +283,9 @@ main() {
 
     if [[ "$ASSUME_YES" != true && "$DRY_RUN" != true ]]; then
         echo
-        log_warn "This will overwrite the SPI NAND of the connected board."
+        log_warn "This erases and rewrites the SPI NAND of the connected board."
         read -r -p "Continue? (y/N) " reply
         [[ "$reply" =~ ^[Yy]$ ]] || { log_info "Aborted."; exit 0; }
-    fi
-
-    # --- optional full erase -------------------------------------------------
-    if [[ "$ERASE_FIRST" == true ]]; then
-        log_info "Erasing the whole flash..."
-        run_tool EF "$LOADER"
-        log_ok "Flash erased"
-        sleep 2
     fi
 
     # --- DownloadBoot once ---------------------------------------------------
@@ -281,6 +295,19 @@ main() {
     # is in the flash the BROM boots it instead of waiting in MaskROM, and DB
     # can only attach to a device still sitting in MaskROM.
     enter_loader_mode
+
+    # --- Erase ---------------------------------------------------------------
+    # The vendor's rkdownload.sh erases the same way: `db` then `el 0 -1`.
+    # Doing it in-session avoids a second DB, which cannot attach once a
+    # bootable IDB is present.
+    if [[ "$ERASE_FIRST" == true ]]; then
+        log_info "Erasing the whole flash..."
+        run_tool EL 0 -1
+        log_ok "Flash erased"
+    else
+        log_warn "Skipping the erase; the .ubi must fill its partition or UBI" \
+                 "will fail to attach at boot (bad image sequence number)."
+    fi
 
     # --- Root filesystem -----------------------------------------------------
     # The IDB/SPL goes last on purpose: it is the thing that makes the BROM boot

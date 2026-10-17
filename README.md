@@ -41,12 +41,21 @@ so the full capacity of the card is usable.
 5. Build a basic/minimal image using the task **Ctrl/Shift/P**, Run Task and select **build core-image-minimal**
 6. Find the build result in the `build/tmp/deploy/images/<machine>` directory
 7. Flash the image
-    - SDCARD: **Ctrl/Shift/P**, Run Task and select **Write SD card**
-    - NAND: **Ctrl/Shift/P**, Run Task and select **Flash SPI NAND**
+    - SDCARD: **Ctrl/Shift+P**, Run Task and select **Write SD card**
+    - NAND: **Ctrl/Shift+P**, Run Task and select **Flash SPI NAND**
 8. Boot your device
+
+The NAND task erases the whole SPI NAND before writing, so anything already
+stored on it is lost. That erase is not optional in practice: a `.ubi` is
+smaller than its partition, and UBI refuses to attach if any block still holds
+another image's sequence number.
 
 
 ## Logging in
+
+Over the UART (ttyS2), or over the USB port: the board presents itself to the
+host as a CDC-ACM serial device (`/dev/ttyACM*` on Linux, a COM port on Windows)
+carrying its own login prompt.
 
 ```
 login: root
@@ -54,7 +63,8 @@ password: password
 ```
 
 Change the password (in `core-image-%.bbappend`, or with the `passwd` command)
-before deploying anywhere it matters.
+before deploying anywhere it matters. The USB port is also the power port, so
+anyone who can plug in a cable can reach that login prompt.
 
 ## Extras
 
@@ -70,7 +80,7 @@ bootable-looking, incomplete image.
 
 ```
 ubidetach -m 0 2>/dev/null || true     # detach UBI first if it's attached
-flash_erase -N /dev/mtd0 0 0           # whole chip, don't skip bad blocks
+fd /dev/          # whole chip, don't skip bad blocks
 ```
 
 From the U-Boot console instead: `mtd erase.dontskipbad spi-nand0`.
