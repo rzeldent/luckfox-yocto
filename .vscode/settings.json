@@ -82,6 +82,14 @@
             }
         },
         {
+            "name": "Luckfox Pico Mini B CAMERA SDCARD",
+            "pathToBuildFolder": "${workspaceFolder}/build",
+            "shellEnv": {
+                "MACHINE": "luckfox-pico-mini-b-camera",
+                "DISTRO": "luckfox",
+            }
+        },
+        {
             "name": "Luckfox Pico Mini B SPI NAND",
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
