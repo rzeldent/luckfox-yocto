@@ -22,7 +22,6 @@ corresponding `-spi-nand` variant.
 | `luckfox-pico-mini-a` | Luckfox Pico Mini A | SD card |
 | `luckfox-pico-mini-b` | Luckfox Pico Mini B | SD card |
 | `luckfox-pico-mini-b-spi-nand` | Luckfox Pico Mini B | SPI NAND |
-| `luckfox-pico-mini-b-camera` | Luckfox Pico Mini B with SC3336 camera | SD card |
 
 The SD card images resize the root filesystem to fill the card on first boot,
 so the full capacity of the card is usable.

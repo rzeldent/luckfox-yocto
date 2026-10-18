@@ -49,8 +49,7 @@
                 "luckfox-pico-max",
                 "luckfox-pico-mini-a",
                 "luckfox-pico-mini-b",
-                "luckfox-pico-mini-b-sdcard",
-                "luckfox-pico-mini-b-camera"
+                "luckfox-pico-mini-b-sdcard"
             ],
             "default": "luckfox-pico-max"
         },
