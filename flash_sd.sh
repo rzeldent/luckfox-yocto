@@ -17,7 +17,8 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-MACHINE="${MACHINE:-luckfox-pico-max}"
+# SD card images come from the "-sd-card" machines; the suffix is added if omitted.
+MACHINE="${MACHINE:-luckfox-pico-max-sd-card}"
 DEPLOY_DIR=""
 DEPLOY_DIR_SET=false
 
@@ -53,7 +54,7 @@ Usage: sudo $0 [OPTIONS]
 Flash an SD card with a built Yocto image.
 
 Options:
-  -m, --machine NAME     Machine whose image to flash
+  -m, --machine NAME     Machine whose image to flash (-sd-card suffix optional)
                          (default: $MACHINE)
   -d, --deploy-dir DIR   Yocto deploy directory
                          (default: <repo>/build/tmp/deploy/images/<machine>)
@@ -66,7 +67,7 @@ Options:
 
 Examples:
   sudo $0 -D /dev/sdb
-  sudo $0 -m luckfox-pico-plus -D /dev/sdb
+  sudo $0 -m luckfox-pico-plus-sd-card -D /dev/sdb
   sudo $0 -D /dev/sdb -e -y
 EOF
 }
@@ -103,9 +104,11 @@ newest_match() {
 }
 
 discover_image() {
+    [[ "$MACHINE" == *-sd-card ]] || MACHINE="${MACHINE}-sd-card"
+
     # Derive the deploy dir from the machine unless it was set explicitly.
     if [[ "$DEPLOY_DIR_SET" != true ]]; then
-        DEPLOY_DIR="$SCRIPT_DIR/build/tmp/deploy/images/$MACHINE"
+        DEPLOY_DIR="$SCRIPT_DIR/build/tmp/deploy/images/${MACHINE}"
     fi
 
     [[ -d "$DEPLOY_DIR" ]] || die "Deploy directory not found: $DEPLOY_DIR"

@@ -28,48 +28,48 @@
         {
             "label": "Write SD card (bmaptool)",
             "type": "shell",
-            "command": "sudo ${workspaceFolder}/flash_sd.sh --machine ${input:machine} --device ${input:device}",
+            "command": "sudo ${workspaceFolder}/flash_sd.sh --machine ${input:machineSdCard} --device ${input:device}",
             "problemMatcher": []
         },
         {
             "label": "Flash SPI NAND (upgrade_tool)",
             "type": "shell",
-            "command": "sudo ${workspaceFolder}/flash_spi_nand.sh --deploy-dir ${workspaceFolder}/build/tmp/deploy/images/${input:nandMachine}",
+            "command": "sudo ${workspaceFolder}/flash_spi_nand.sh --machine ${input:machineSpiNand}",
             "problemMatcher": []
         }
     ],
     "inputs": [
         {
-            "id": "machine",
+            "id": "machineSdCard",
             "type": "pickString",
-            "description": "Machine whose SD card image to flash",
+            "description": "SD card machine to write",
             "options": [
-                "luckfox-pico",
-                "luckfox-pico-plus",
-                "luckfox-pico-max",
-                "luckfox-pico-mini-a",
-                "luckfox-pico-mini-b",
-                "luckfox-pico-mini-b-sdcard"
+                "luckfox-pico-sd-card",
+                "luckfox-pico-plus-sd-card",
+                "luckfox-pico-max-sd-card",
+                "luckfox-pico-mini-sd-card",
+                "luckfox-pico-pi-sd-card"
             ],
-            "default": "luckfox-pico-max"
+            "default": "luckfox-pico-mini-sd-card"
+        },
+        {
+            "id": "machineSpiNand",
+            "type": "pickString",
+            "description": "SPI NAND machine to flash",
+            "options": [
+                "luckfox-pico-spi-nand",
+                "luckfox-pico-plus-spi-nand",
+                "luckfox-pico-max-spi-nand",
+                "luckfox-pico-mini-spi-nand",
+                "luckfox-pico-pi-spi-nand"
+            ],
+            "default": "luckfox-pico-mini-spi-nand"
         },
         {
             "id": "device",
             "type": "promptString",
             "description": "SD card device (check with 'lsblk' first, e.g. /dev/sdb)",
             "default": "/dev/sdb"
-        },
-        {
-            "id": "nandMachine",
-            "type": "pickString",
-            "description": "Machine whose SPI NAND image to flash",
-            "options": [
-                "luckfox-pico-spi-nand",
-                "luckfox-pico-plus-spi-nand",
-                "luckfox-pico-max-spi-nand",
-                "luckfox-pico-mini-b-spi-nand"
-            ],
-            "default": "luckfox-pico-mini-b-spi-nand"
         }
     ]
 }

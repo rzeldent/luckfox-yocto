@@ -39,7 +39,9 @@ TOOL_BIN="upgrade_tool"
 # rkbin/ are rejected by this chip ("wrong hash of loader").
 LOADER="${LOADER:-/home/rene/repos/luckfox-pico/output/image/download.bin}"
 
-DEPLOY_DIR="${DEPLOY_DIR:-$SCRIPT_DIR/build/tmp/deploy/images/luckfox-pico-mini-b-spi-nand}"
+# NAND images come from the "-spi-nand" machines; the suffix is added if omitted.
+MACHINE="${MACHINE:-luckfox-pico-mini-spi-nand}"
+DEPLOY_DIR="${DEPLOY_DIR:-$SCRIPT_DIR/build/tmp/deploy/images/${MACHINE}}"
 
 IDBLOADER_FILE=""
 UBOOT_FILE=""
@@ -81,8 +83,10 @@ Usage: sudo $0 [OPTIONS]
 Flash the SPI NAND of a Luckfox Pico Mini (RV1103) over USB.
 
 Options:
+  -m, --machine NAME     Machine whose image to flash
+                         (default: $MACHINE)
   -d, --deploy-dir DIR   Yocto deploy directory
-                         (default: $DEPLOY_DIR)
+                         (default: <repo>/build/tmp/deploy/images/<machine>)
   -t, --tool-dir DIR     Directory containing upgrade_tool + config.ini
                          (default: $TOOL_DIR)
   -l, --loader FILE      Loader used for DownloadBoot
@@ -100,7 +104,8 @@ Options:
 Examples:
   sudo $0
   sudo $0 --no-erase
-  sudo $0 --deploy-dir build/tmp/deploy/images/luckfox-pico-mini-b-spi-nand
+  sudo $0 -m luckfox-pico-max-spi-nand
+  sudo $0 --deploy-dir build/tmp/deploy/images/luckfox-pico-mini-spi-nand
 EOF
 }
 
@@ -111,7 +116,8 @@ EOF
 parse_args() {
     while [[ $# -gt 0 ]]; do
         case "$1" in
-            -d|--deploy-dir) DEPLOY_DIR="$2"; shift 2 ;;
+            -m|--machine)    MACHINE="$2"; shift 2 ;;
+            -d|--deploy-dir) DEPLOY_DIR="$2"; DEPLOY_DIR_SET=true; shift 2 ;;
             -t|--tool-dir)   TOOL_DIR="$2";   shift 2 ;;
             -l|--loader)     LOADER="$2";     shift 2 ;;
             -i|--idbloader)  IDBLOADER_FILE="$2"; shift 2 ;;
@@ -125,6 +131,13 @@ parse_args() {
             *) die "Unknown option: $1 (try --help)" ;;
         esac
     done
+    
+    [[ "$MACHINE" == *-spi-nand ]] || MACHINE="${MACHINE}-spi-nand"
+
+    # Recompute DEPLOY_DIR if not explicitly set and MACHINE changed
+    if [[ -z "${DEPLOY_DIR_SET:-}" ]]; then
+        DEPLOY_DIR="$SCRIPT_DIR/build/tmp/deploy/images/${MACHINE}"
+    fi
 }
 
 # ---------------------------------------------------------------------------
@@ -264,6 +277,7 @@ main() {
     rootfs_sectors=$(( (rootfs_size + 511) / 512 ))
 
     echo
+    log_info "Machine    : $MACHINE"
     log_info "Deploy dir : $DEPLOY_DIR"
     log_info "Tool dir   : $TOOL_DIR"
     log_info "Loader     : $LOADER"

@@ -18,79 +18,103 @@
     "bitbake.parseOnSave": false,
     "bitbake.buildConfigurations": [
         {
-            "name": "Luckfox Pico SDCARD",
+            "name": "Luckfox Pico (SD card)",
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
-                "MACHINE": "luckfox-pico",
+                "MACHINE": "luckfox-pico-sd-card",
                 "DISTRO": "luckfox",
+                "LUCKFOX_FEATURES": "camera aic8800dc npu vcodec"
             }
         },
         {
-            "name": "Luckfox Pico SPI NAND",
+            "name": "Luckfox Pico (SPI NAND)",
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
                 "MACHINE": "luckfox-pico-spi-nand",
                 "DISTRO": "luckfox",
+                "LUCKFOX_FEATURES": "camera aic8800dc npu vcodec"
             }
         },
         {
-            "name": "Luckfox Pico Plus SDCARD",
+            "name": "Luckfox Pico Plus (SD card)",
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
-                "MACHINE": "luckfox-pico-plus",
+                "MACHINE": "luckfox-pico-plus-sd-card",
                 "DISTRO": "luckfox",
+                "LUCKFOX_FEATURES": "camera aic8800dc npu vcodec"
             }
         },
         {
-            "name": "Luckfox Pico Plus SPI NAND",
+            "name": "Luckfox Pico Plus (SPI NAND)",
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
                 "MACHINE": "luckfox-pico-plus-spi-nand",
                 "DISTRO": "luckfox",
+                "LUCKFOX_FEATURES": "camera aic8800dc npu vcodec"
             }
         },
         {
-            "name": "Luckfox Pico Max SDCARD",
+            "name": "Luckfox Pico Max (SD card)",
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
-                "MACHINE": "luckfox-pico-max",
+                "MACHINE": "luckfox-pico-max-sd-card",
                 "DISTRO": "luckfox",
+                "LUCKFOX_FEATURES": "camera aic8800dc npu vcodec"
             }
         },
         {
-            "name": "Luckfox Pico Max SPI NAND",
+            "name": "Luckfox Pico Max (SPI NAND)",
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
                 "MACHINE": "luckfox-pico-max-spi-nand",
                 "DISTRO": "luckfox",
+                "LUCKFOX_FEATURES": "camera aic8800dc npu vcodec"
             }
         },
         {
-            "name": "Luckfox Pico Mini A SDCARD",
+            "name": "Luckfox Pico Mini (SD card)",
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
-                "MACHINE": "luckfox-pico-mini-a",
+                "MACHINE": "luckfox-pico-mini-sd-card",
                 "DISTRO": "luckfox",
+                "LUCKFOX_FEATURES": "camera aic8800dc npu vcodec"
             }
         },
         {
-            "name": "Luckfox Pico Mini B SDCARD",
+            "name": "Luckfox Pico Mini (SPI NAND)",
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
-                "MACHINE": "luckfox-pico-mini-b-sdcard",
+                "MACHINE": "luckfox-pico-mini-spi-nand",
                 "DISTRO": "luckfox",
+                "LUCKFOX_FEATURES": "camera aic8800dc npu vcodec"
             }
         },
         {
-            "name": "Luckfox Pico Mini B SPI NAND",
+            "name": "Luckfox Pico Pi (SD card)",
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
-                "MACHINE": "luckfox-pico-mini-b-spi-nand",
+                "MACHINE": "luckfox-pico-pi-sd-card",
                 "DISTRO": "luckfox",
+                "LUCKFOX_FEATURES": "camera aic8800dc npu vcodec"
+            }
+        },
+        {
+            "name": "Luckfox Pico Pi (SPI NAND)",
+            "pathToBuildFolder": "${workspaceFolder}/build",
+            "shellEnv": {
+                "MACHINE": "luckfox-pico-pi-spi-nand",
+                "DISTRO": "luckfox",
+                "LUCKFOX_FEATURES": "camera aic8800dc npu vcodec"
             }
         }
     ],
     
     "bitbake.disableConfigModification": true,
-    "bitbake.disableDevtoolDebugBuild": true
+    "bitbake.disableDevtoolDebugBuild": true,
+
+    "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "./build/tmp/**": true
+    }
 }

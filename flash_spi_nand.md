@@ -8,10 +8,10 @@ Build SDCARD image for Luckfox Pico Mini A and write to sdcard
 
 ## Step 2
 
-After building for the Luckfox Pico Mini B (`luckfox-pico-mini-b-spi-nand`), copy the following three files to the SDCARD:
-- idbloader.img-luckfox-pico-mini-b-spi-nand-xxxx.yyy-zzz
-- u-boot-luckfox-pico-mini-b-spi-nand-xxxx.yy-zz.img
-- core-image-base-luckfox-pico-mini-b-spi-nand.rootfs-xxxxxxxxxxxxxx.ubi
+After building for the Luckfox Pico Mini B (`luckfox-pico-mini-spi-nand`), copy the following three files to the SDCARD:
+- idbloader.img-luckfox-pico-mini-spi-nand-xxxx.yyy-zzz
+- u-boot-luckfox-pico-mini-spi-nand-xxxx.yy-zz.img
+- core-image-base-luckfox-pico-mini-spi-nand.rootfs-xxxxxxxxxxxxxx.ubi
 
 The first contains the primary (ddr/tpl) and secondary bootloader (spl), the second contains U-Boot itself, and the third contains the device tree blob (dtb), the kernel (Linux kernel), and the root filesystem.
 
@@ -81,17 +81,17 @@ Format partitions:
 Flash build artifacts
 
 ```
- # nandwrite -p /dev/mtd1 /path/to/idbloader.img-luckfox-pico-mini-b-spi-nand-xxxx.yyy-zzz
+ # nandwrite -p /dev/mtd1 /path/to/idbloader.img-luckfox-pico-mini-spi-nand-xxxx.yyy-zzz
  Writing data to block 0 at offset 0x0
 
- # nandwrite -p /dev/mtd2 /path/to/u-boot-luckfox-pico-mini-b-spi-nand-xxxx.yy-zz.img
+ # nandwrite -p /dev/mtd2 /path/to/u-boot-luckfox-pico-mini-spi-nand-xxxx.yy-zz.img
  Writing data to block 0 at offset 0x0
  Writing data to block 1 at offset 0x20000
  Writing data to block 2 at offset 0x40000
  Writing data to block 3 at offset 0x60000
  Writing data to block 4 at offset 0x80000
 
- # ubiformat /dev/mtd3 -f /path/to/core-image-base-luckfox-pico-mini-b-spi-nand.rootfs-xxxxxxxxxxxxxx.ubi
+ # ubiformat /dev/mtd3 -f /path/to/core-image-base-luckfox-pico-mini-spi-nand.rootfs-xxxxxxxxxxxxxx.ubi
  ubiformat: mtd3 (nand), size 133038080 bytes (126.8 MiB), 1015 eraseblocks of 131072 bytes (1280 KiB), min. I/O size 2048 bytes
  libscan: scanning eraseblock 1014 -- 100 % complete  
  ubiformat: 1015 eraseblocks are supposedly empty
