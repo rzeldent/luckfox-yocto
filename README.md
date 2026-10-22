@@ -20,19 +20,21 @@ There are 5 base machines (one per board). Optional features are controlled via 
 
 ### Feature flags (`LUCKFOX_FEATURES`)
 
-Features are space-separated tokens passed via `LUCKFOX_FEATURES` (in `local.conf`, environment, or VS Code build configuration). The default is `camera aic8800dc npu vcodec`.
+Features are space-separated tokens passed via `LUCKFOX_FEATURES` (in `local.conf`, environment, or VS Code build configuration). The default is `camera npu vcodec`. When set through the environment (not `local.conf`), BitBake only sees it if `BB_ENV_PASSTHROUGH_ADDITIONS=LUCKFOX_FEATURES` is exported too; the VS Code build configurations already do this.
 
 | Feature | Description |
 | --- | --- |
 | `camera` | MIPI CSI camera stack (SC3336 sensor, CIF, ISP1) |
-| `aic8800dc` | AIC8800DC WiFi/BT via SDIO (kernel modules, firmware, init, wpa-supplicant, bluez5) |
-| `npu` | Rockchip NPU kernel driver (rknpu) |
+| `rtl8723bs` | Realtek RTL8723BS WiFi via SDIO (rtw88 driver package, WiFi only), SDIO ID `024c:b723` |
+| `npu` | Rockchip NPU kernel driver (rknpu), RV1103 and RV1106 |
 | `vcodec` | VPU/VIDEO codec kernel drivers (RGA, VDEC) |
 
 **Examples:**
 - SD card boot with all features (default): `MACHINE=luckfox-pico-max-sd-card`
 - SPI NAND boot: `MACHINE=luckfox-pico-max-spi-nand`
 - Minimal build (no camera, no WiFi, no NPU): `MACHINE=luckfox-pico-sd-card LUCKFOX_FEATURES=""`
+
+For the Pico, Pico Plus, Pico Max, and Pico Mini, enabling `rtl8723bs` configures the SDMMC host for the SDIO WiFi module and its reset GPIO. Without this feature, the host is configured as a removable SD card slot.
 
 The SD card images resize the root filesystem to fill the card on first boot, so the full capacity of the card is usable.
 
@@ -72,13 +74,53 @@ Change the password (in `core-image-%.bbappend`, or with the `passwd` command) b
 ## Extras
 `fastfetch` is included for a Linux overview.
 
+## Configure RTL8723BS Wi-Fi
+
+For a board built with the `rtl8723bs` feature, the driver creates `wlan0`.
+To join a WPA2-Personal network, create `/etc/wpa_supplicant.conf` on the
+board with your network details:
+
+```
+ctrl_interface=/var/run/wpa_supplicant
+update_config=1
+country=US
+
+network={
+    ssid="your Wi-Fi name"
+    psk="your Wi-Fi password"
+    key_mgmt=WPA-PSK
+}
+```
+
+Replace `country` with your two-letter regulatory country code and set the file
+permissions so only root can read the passphrase:
+
+```
+chmod 600 /etc/wpa_supplicant.conf
+```
+
+The init script reads this file on boot, starts `wpa_supplicant`, and requests
+an address for `wlan0` with DHCP. After editing the file, apply it without
+rebooting by restarting the service (do not start `wpa_supplicant` by hand while
+it is running, that fails with "ctrl_iface exists"):
+
+```
+/etc/init.d/rtl8723bs-init restart
+```
+
+Check the result with `wpa_cli -i wlan0 status` (look for `wpa_state=COMPLETED`),
+`ip addr show wlan0` and `ip route`. The RTL8723BS is 2.4 GHz only, so the
+network must broadcast on 2.4 GHz. The repeated
+`RTW88 IRQ during scan` lines are temporary driver diagnostics; the packaged
+driver removes that per-interrupt console log.
+
 ## Erase NAND
 
 With the board booted from SD and the SPI NAND visible as a raw MTD device, erase it from the target. Wiping the IDB this way is what makes the board fall back into MaskROM (USB download) mode on the next power-up, which is the way back when `flash_spi_nand.sh` fails part-way and leaves the flash holding a bootable-looking, incomplete image.
 
 ```
 ubidetach -m 0 2>/dev/null || true      # detach UBI first if it's attached
-flash_erase -N /dev/mtd0 0              # whole chip, don't skip bad blocks
+flash_erase -N /dev/mtd0 0 0            # whole chip, don't skip bad blocks
 ```
 
 From the U-Boot console instead: `mtd erase.dontskipbad spi-nand0`.
