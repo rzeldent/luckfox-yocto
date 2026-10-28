@@ -59,6 +59,73 @@ The SD card images resize the root filesystem to fill the card on first boot, so
 
 The NAND task erases the whole SPI NAND before writing, so anything already stored on it is lost. That erase is not optional in practice: a `.ubi` is smaller than its partition, and UBI refuses to attach if any block still holds another image's sequence number.
 
+## New Multimedia Features (Hardware Video Encoding)
+
+This layer now includes recipes for Rockchip's hardware video encoding stack on RV1103/RV1106:
+
+### Added Recipes (`meta-rv110x/recipes-multimedia/`)
+| Recipe | Description |
+|--------|-------------|
+| `rockchip-mpp` | MPP library + headers + pkgconfig (from Luckfox SDK + rockchip-linux/mpp) |
+| `rockit` | Rockit library (RKMPI wrapper for hardware encode/decode) |
+| `rkaiq` | ISP 3A algorithms library (auto-exposure, auto-white-balance, auto-focus) |
+| `rga` | 2D graphics acceleration library (rotation, scaling, format conversion) |
+| `rkmuxer` | Media muxing library (MP4, TS, FLV containers) |
+| `rtsp` | RTSP streaming library |
+| `rksysutils` | System utilities library |
+| `rkipc` | Complete RTSP streaming application with hardware encoding |
+| `ffmpeg_%.bbappend` | Adds `rkmpp` PACKAGECONFIG for FFmpeg |
+
+### Enabled in `build/conf/local.conf`
+The example `local.conf` already includes:
+```bitbake
+LICENSE_FLAGS_ACCEPTED = "commercial"
+IMAGE_INSTALL:append = " ffmpeg"
+LUCKFOX_FEATURES:append = " rtl8723bs"
+IMAGE_INSTALL:append = " rockchip-mpp rockit rkaiq rga rkmuxer rtsp rksysutils rkipc"
+```
+
+### Streaming with rkipc (Recommended)
+The `rkipc` application provides a complete RTSP server using hardware encoding:
+
+```sh
+# On the board
+rkipc -a /usr/share/rkipc/rkipc-300w.ini
+
+# On your PC
+vlc rtsp://<board-ip>/live/0
+```
+
+The INI file (`rkipc-300w.ini` or `rkipc-400w.ini`) configures resolution, bitrate, codec (H.264/H.265), and RTSP paths.
+
+### Using FFmpeg with h264_rkmpp
+Once the kernel VEPU driver is available (see limitations below):
+
+```sh
+ffmpeg -f v4l2 -input_format nv12 -video_size 1280x720 -framerate 25 -i /dev/video0 \
+  -c:v h264_rkmpp -b:v 2M -g 25 -f rtp_mpegts rtp://<PC_IP>:5000
+
+# On PC
+vlc rtp://@:5000
+```
+
+### ⚠️ Current Limitation: Kernel VEPU Driver
+The hardware H.264/HEVC encoder (VEPU/RKVENC) requires a kernel driver that **only exists in Rockchip's vendor 5.10 kernel**, not in mainline Linux 7.1 used by this layer.
+
+| Component | Status |
+|-----------|--------|
+| Kernel VEPU/RKVENC driver | ❌ Not in mainline (vendor 5.10 only) |
+| `mpp_service` character device | ❌ Not available |
+| Userspace libraries (MPP, Rockit, RKAIQ, RGA, etc.) | ✅ Provided via recipes |
+| `rkipc` RTSP application | ✅ Recipe added (may work if minimal kernel support exists) |
+| FFmpeg `h264_rkmpp` encoder | ✅ PACKAGECONFIG added (needs kernel driver) |
+
+**Workarounds:**
+1. **Use `rkipc`** - It uses the prebuilt Luckfox SDK libraries and may work with minimal kernel support
+2. **Software encoding** - Add `PACKAGECONFIG:append:pn-ffmpeg = " x264"` (already works with `LICENSE_FLAGS_ACCEPTED = "commercial"`)
+3. **Port the VEPU driver** - Copy from vendor kernel (`drivers/media/platform/rockchip/vepu/`, `rkvenc/`, `mpp_service/`) to mainline 7.1
+
+For now, software encoding with `libx264` at 640×480 @ 15-20 fps with `-preset ultrafast` is the most reliable option on the Cortex-A7.
 
 ## Logging in
 
