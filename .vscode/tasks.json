@@ -4,6 +4,17 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "Build luckfox-image",
+            "type": "bitbake",
+            "recipes": [
+                "luckfox-image"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
             "label": "Build core-image-base",
             "type": "bitbake",
             "recipes": [
@@ -11,7 +22,7 @@
             ],
             "group": {
                 "kind": "build",
-                "isDefault": true
+                "isDefault": false
             }
         },
         {
@@ -22,7 +33,7 @@
             ],
             "group": {
                 "kind": "build",
-                "isDefault": true
+                "isDefault": false
             }
         },
         {
@@ -50,20 +61,18 @@
                 "luckfox-pico-mini-sd-card",
                 "luckfox-pico-pi-sd-card"
             ],
-            "default": "luckfox-pico-mini-sd-card"
+            "default": "luckfox-pico-plus-sd-card"
         },
         {
             "id": "machineSpiNand",
             "type": "pickString",
             "description": "SPI NAND machine to flash",
             "options": [
-                "luckfox-pico-spi-nand",
                 "luckfox-pico-plus-spi-nand",
                 "luckfox-pico-max-spi-nand",
-                "luckfox-pico-mini-spi-nand",
-                "luckfox-pico-pi-spi-nand"
+                "luckfox-pico-mini-spi-nand"
             ],
-            "default": "luckfox-pico-mini-spi-nand"
+            "default": "luckfox-pico-plus-spi-nand"
         },
         {
             "id": "device",

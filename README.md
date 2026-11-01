@@ -1,42 +1,108 @@
 # luckfox-yocto
 
-Pre-configured example of Yocto project for Luckfox boards.
+Source-oriented Yocto configuration for Luckfox RV1103/RV1106 boards.
 
 ## Description
 
-This is an example and starting point for working with the [meta-rv110x](https://github.com/RamasyaR/meta-rv110x) metalayer, which supports the Luckfox Pico, Pico Plus, Pico Max, Pico Mini and Pico Pi boards.
+The pinned `meta-rv110x` BSP is extended by the repository-owned `meta-luckfox`
+layer. `luckfox-project` selects the Luckfox SDK's Linux 5.10.160 **original
+kernel source**, not SDK `.ko` files. The existing patched mainline provider
+remains selectable with `LUCKFOX_KERNEL = "mainline"`.
+
+**Current verification:** source Kconfig and device-tree checks are available,
+but no Yocto image or target boot has been validated for the new vendor provider.
+Image builds on the current Ubuntu host are blocked by AppArmor's
+unprivileged-user-namespace restriction. An administrator must grant scoped
+BitBake permission; do not disable the sanity check or AppArmor.
 
 ## Supported machines
 
-There are 5 base machines (one per board). Optional features are controlled via the `LUCKFOX_FEATURES` variable instead of separate machine names.
+Use a distinct machine and image per board and boot medium. The SDK identifies
+Pico and Pico Plus as **RV1103**, despite the older layer's `rv1106-*` DT names.
 
 | Machine | Board | SoC |
 | --- | --- | --- |
-| `luckfox-pico-sd-card`, `luckfox-pico-spi-nand` | Luckfox Pico | RV1106 |
-| `luckfox-pico-plus-sd-card`, `luckfox-pico-plus-spi-nand` | Luckfox Pico Plus | RV1106 |
+| `luckfox-pico-sd-card` | Luckfox Pico | RV1103 |
+| `luckfox-pico-plus-sd-card`, `luckfox-pico-plus-spi-nand` | Luckfox Pico Plus | RV1103 |
 | `luckfox-pico-max-sd-card`, `luckfox-pico-max-spi-nand` | Luckfox Pico Max | RV1106 |
-| `luckfox-pico-mini-sd-card`, `luckfox-pico-mini-spi-nand` | Luckfox Pico Mini A/B | RV1103G |
-| `luckfox-pico-pi-sd-card`, `luckfox-pico-pi-spi-nand` | Luckfox Pico Pi | RV1106 |
+| `luckfox-pico-mini-sd-card`, `luckfox-pico-mini-spi-nand` | Luckfox Pico Mini; NAND requires a populated NAND part | RV1103G |
+
+Pico Pro and Max share the SDK's `rv1106g-luckfox-pico-pro-max` DT; this is not
+proof of identical installed RAM or NAND capacity. RAM comes from boot-time DDR
+initialization, not a board-size declaration in these DTs.
+
+For the existing mainline provider, select only its supported driver flags:
+
+```bitbake
+LUCKFOX_KERNEL = "mainline"
+LUCKFOX_FEATURES = "camera npu"
+```
+
+The SDK also contains Pi, Ultra, Zero, WebBee and 86Panel DTs. Pi/Ultra/Zero/
+86Panel primarily have eMMC SDK configurations. The existing layer's Pi machine
+incorrectly reuses the Pico bootloader, and Pi's SD slot uses a different
+controller. The product image rejects Pi until bootloader/storage integration is
+validated. Pi's vendor kernel DT is included in the source DT tests, **not**
+advertised as a working image. Legacy Pico/Pi NAND machine files are likewise not
+evidence of supported NAND hardware. Do not flash one board's image onto another.
 
 ### Feature flags (`LUCKFOX_FEATURES`)
 
-Features are space-separated tokens passed via `LUCKFOX_FEATURES` (in `local.conf`, environment, or VS Code build configuration). The default is `camera npu vcodec`. When set through the environment (not `local.conf`), BitBake only sees it if `BB_ENV_PASSTHROUGH_ADDITIONS=LUCKFOX_FEATURES` is exported too; the VS Code build configurations already do this.
+`LUCKFOX_FEATURES` selects source kernel drivers. The default is `camera npu rga`.
+Set it in `build/conf/local.conf`, or export it together with
+`BB_ENV_PASSTHROUGH_ADDITIONS=LUCKFOX_FEATURES`. Unknown features fail rather than
+silently producing a different image.
 
 | Feature | Description |
 | --- | --- |
-| `camera` | MIPI CSI camera stack (SC3336 sensor, CIF, ISP1) |
-| `rtl8723bs` | Realtek RTL8723BS WiFi via SDIO (rtw88 driver package, WiFi only), SDIO ID `024c:b723` |
-| `npu` | Rockchip NPU kernel driver (rknpu), RV1103 and RV1106 |
-| `vcodec` | VPU/VIDEO codec kernel drivers (RGA, VDEC) |
+| `camera` | Source SC3336 sensor, CIF, CSI PHY and vendor ISP drivers |
+| `npu` | Source rknpu driver; does **not** install proprietary inference userspace |
+| `rga` | Source vendor multi-RGA driver; 2D scaling/rotation, **not** video encoding |
+| `rtl8723bs` | Existing source rtw88 driver, mainline NAND builds only; vendor integration is not validated |
+| `nand-mtd` | Existing BSP flag for non-boot NAND exposure; not NAND geometry configuration |
 
-**Examples:**
-- SD card boot with all features (default): `MACHINE=luckfox-pico-max-sd-card`
-- SPI NAND boot: `MACHINE=luckfox-pico-max-spi-nand`
-- Minimal build (no camera, no WiFi, no NPU): `MACHINE=luckfox-pico-sd-card LUCKFOX_FEATURES=""`
+The legacy `vcodec` flag is rejected: the generic mainline/vendor MPP driver does
+not bind the RV110x encoder. Use `rga` for source-built graphics acceleration.
+With the vendor provider, disabled features remove their kernel configurations
+and disable the relevant DT functions. Disabling camera also avoids its CMA
+request when no other DMA feature is selected. `LUCKFOX_CMA_SIZE` defaults to 24M
+with camera/NPU/RGA, or 0M without them; tune it against actual RAM and workloads.
 
-For the Pico, Pico Plus, Pico Max, and Pico Mini, enabling `rtl8723bs` configures the SDMMC host for the SDIO WiFi module and its reset GPIO. Without this feature, the host is configured as a removable SD card slot.
+RTL8723BS and SD boot cannot occupy the same SDMMC bus. Their combination fails
+configuration validation. The vendor DT adaptation makes the normal slot
+removable, disables the SDK FIQ console in favor of `ttyS2`, and removes the
+SDK's hard-coded `/dev/mmcblk1p7` boot argument so extlinux selects the image root.
 
-The SD card images resize the root filesystem to fill the card on first boot, so the full capacity of the card is usable.
+### Optional image packages
+
+`luckfox-image` does not inherit the wildcard `core-image-*` debug additions and
+does not recommend every compiled kernel module. Set `LUCKFOX_IMAGE_FEATURES`
+to a space-separated selection of ordinary Yocto image features:
+
+| Feature | Included functionality |
+| --- | --- |
+| `hardware-tools` | V4L2/media, I2C and MTD/UBIFS inspection tools |
+| `ssh-server-dropbear` | Optional small SSH server |
+| `tools-debug` | Optional Yocto debugging tools |
+| `software-codecs` | Source FFmpeg, without falsely advertised RV110x rkmpp encoding |
+| `npu-runtime` | Proprietary `librknnmrt`, vendor DMA-heap ABI only |
+
+Required DDR boot firmware is allowed and remains separate from kernel modules.
+Proprietary NPU/media userspace is **off by default**. To include NPU inference:
+
+```bitbake
+LUCKFOX_FEATURES = "npu"
+LUCKFOX_IMAGE_FEATURES = "npu-runtime"
+LUCKFOX_ALLOW_PROPRIETARY_USERSPACE = "1"
+TCLIBC = "glibc"
+```
+
+An explicit `luckfox-proprietary` license flag also guards recipes containing
+proprietary payloads. Closed libraries are marked `CLOSED`, rather than borrowing
+an unrelated RKNN Toolkit license for Rockit/RTSP. Opting in is not a substitute
+for checking the vendor's redistribution terms. `media-runtime` is currently rejected even after opting in:
+complete Rockit streaming needs opaque **kernel** payloads, not merely userspace
+libraries. Optional userspace permission is not permission for closed modules.
 
 ## Dependencies
 
@@ -45,91 +111,115 @@ The SD card images resize the root filesystem to fill the card on first boot, so
 * [Task Buttons vscode extension](https://marketplace.visualstudio.com/items?itemName=spencerwmiles.vscode-task-buttons)
 * `bmaptool` (for writing SD cards)
 
-## Quick Start
-1. Install vscode
-2. Install extensions
-3. Clone and open this repo in vscode
-4. Select MACHINE using the button in the bottom right corner of the vscode window (10 configurations available: 5 boards × SD/NAND)
-5. Build a basic/minimal image using the task **Ctrl/Shift/P**, Run Task and select **build core-image-minimal**
-6. Find the build result in the `build/tmp/deploy/images/<board>-sd-card` (SD) or `build/tmp/deploy/images/<board>-spi-nand` (NAND) directory
-7. Flash the image
-    - SDCARD: **Ctrl/Shift+P**, Run Task and select **Write SD card**
-    - NAND: **Ctrl/Shift+P**, Run Task and select **Flash SPI NAND**
-8. Boot your device
+## Building SD and NAND images
+
+The initial selected target is **Pico Plus (RV1103)**. Initialize pinned layers
+in this checkout; no main-checkout devtool workspace is used:
+
+```sh
+git submodule update --init
+. openembedded-core/oe-init-build-env build
+MACHINE=luckfox-pico-plus-sd-card bitbake luckfox-image
+```
+
+For a NAND-constrained image, use `LUCKFOX_FEATURES = ""` and
+`LUCKFOX_IMAGE_FEATURES = ""`, then add only the required drivers and tools.
+No FFmpeg, Wi-Fi or streaming packages are appended globally.
+
+NAND requires **verified physical** page size, eraseblock size and chip capacity
+in decimal bytes. The Pico Plus SDK's partition totals alone do not establish
+these. Obtain the actual NAND part marking and, from a booted board, `mtdinfo -a`
+or the matching kernel MTD identification. Set:
+
+```bitbake
+# Examples only, NOT confirmed Pico Plus geometry:
+# LUCKFOX_NAND_PAGE_SIZE = "2048"
+# LUCKFOX_NAND_ERASE_SIZE = "131072"
+# LUCKFOX_NAND_SIZE = "134217728"
+```
+
+Only after confirming geometry:
+
+```sh
+MACHINE=luckfox-pico-plus-spi-nand bitbake luckfox-image
+```
+
+NAND flash readiness is **blocked pending that confirmation**. The upstream
+boot layout is retained: SPL at 0, U-Boot at 128KiB, rootfs at 1152KiB. This is
+**not** the SDK's env/idblock/boot/oem layout. Geometry checks reject incompatible
+eraseblock alignment. UBI construction uses measured geometry and reserves 24
+physical blocks on a 128MiB/128KiB-eraseblock part (44 on a 256MiB part), reserving
+20 bad-block slots per 1024 physical blocks plus four UBI overhead blocks. The final `.ubi`
+must fit the remaining raw partition budget. Existing bad blocks and ECC still
+need target confirmation. SPL and U-Boot must fit their own partitions as well.
+
+SD uses the BSP GPT WIC layout: loader1 at sector 64, U-Boot at sector 16384 and
+ext4 rootfs at sector 32768. SD images include the existing first-boot rootfs
+resize service.
+
+Outputs belong outside version control under `build/tmp/deploy/images/${MACHINE}`.
+The SD deliverables are `luckfox-image-${MACHINE}.rootfs.wic` and `.wic.bmap`;
+NAND needs `.ubi`, `idbloader.img` and `u-boot*.img` as a matching set. Before
+delivery, inspect actual image formats/layouts, measure sizes and generate
+`sha256sum` checksums. No image artifacts are currently available.
+
+VS Code's default task is **Build luckfox-image**. Existing core image tasks
+remain available as larger debug-oriented images.
 
 The NAND task erases the whole SPI NAND before writing, so anything already stored on it is lost. That erase is not optional in practice: a `.ubi` is smaller than its partition, and UBI refuses to attach if any block still holds another image's sequence number.
 
-## New Multimedia Features (Hardware Video Encoding)
+## Hardware media and source limitations
 
-This layer now includes recipes for Rockchip's hardware video encoding stack on RV1103/RV1106:
+The SDK at revision `824b817f889c2cbff1d48fcdb18ab494a68f69d1` has original
+C source for rknpu, CIF, ISP, camera sensors and multi-RGA. The vendor recipe
+builds those and checks that Kconfig has not silently discarded selected
+features. It does not import SDK precompiled modules.
 
-### Added Recipes (`meta-rv110x/recipes-multimedia/`)
-| Recipe | Description |
-|--------|-------------|
-| `rockchip-mpp` | MPP library + headers + pkgconfig (from Luckfox SDK + rockchip-linux/mpp) |
-| `rockit` | Rockit library (RKMPI wrapper for hardware encode/decode) |
-| `rkaiq` | ISP 3A algorithms library (auto-exposure, auto-white-balance, auto-focus) |
-| `rga` | 2D graphics acceleration library (rotation, scaling, format conversion) |
-| `rkmuxer` | Media muxing library (MP4, TS, FLV containers) |
-| `rtsp` | RTSP streaming library |
-| `rksysutils` | System utilities library |
-| `rkipc` | Complete RTSP streaming application with hardware encoding |
-| `ffmpeg_%.bbappend` | Adds `rkmpp` PACKAGECONFIG for FFmpeg |
+The actual RV110x H.264/H.265 pipeline loads **`mpp_vcodec.ko` and `rockit.ko`**,
+distributed under `sysdrv/drv_ko/{kmpp,rockit}/release_*_arm`. The alternate
+`*_arm_asm` trees contain compiler-generated assembly from unavailable original
+C files, not a maintainable source port. Neither the generic source MPP driver
+nor installing `rkipc` supplies this missing encoder implementation. These opaque
+kernel payloads and their MCU firmware are excluded.
 
-### Enabled in `build/conf/local.conf`
-The example `local.conf` already includes:
-```bitbake
-LICENSE_FLAGS_ACCEPTED = "commercial"
-IMAGE_INSTALL:append = " ffmpeg"
-LUCKFOX_FEATURES:append = " rtl8723bs"
-IMAGE_INSTALL:append = " rockchip-mpp rockit rkaiq rga rkmuxer rtsp rksysutils rkipc"
-```
+Public source recipes for MPP, RGA and RKAIQ remain in the BSP, but a library
+build alone establishes neither kernel ABI compatibility nor hardware behavior.
+RKNN inference additionally needs the optional proprietary runtime and a
+matching converted model. Camera 3A needs sensor-specific IQ data and a compatible
+userspace engine. No camera capture, inference, scaling, encoding or frame-rate
+claim is made without target execution.
 
-### Streaming with rkipc (Recommended)
-The `rkipc` application provides a complete RTSP server using hardware encoding:
+### Validation
+
+Run policy tests without a full Yocto build:
 
 ```sh
-# On the board
-rkipc -a /usr/share/rkipc/rkipc-300w.ini
-
-# On your PC
-vlc rtsp://<board-ip>/live/0
+python3 -m unittest discover -s tests -v
 ```
 
-The INI file (`rkipc-300w.ini` or `rkipc-400w.ini`) configures resolution, bitrate, codec (H.264/H.265), and RTSP paths.
-
-### Using FFmpeg with h264_rkmpp
-Once the kernel VEPU driver is available (see limitations below):
+For native Kconfig checks of all eight camera/NPU/RGA combinations and compiled
+DT checks of five vendor boards with features on/off, point at a **separate
+source export**, not the read-only SDK checkout:
 
 ```sh
-ffmpeg -f v4l2 -input_format nv12 -video_size 1280x720 -framerate 25 -i /dev/video0 \
-  -c:v h264_rkmpp -b:v 2M -g 25 -f rtp_mpegts rtp://<PC_IP>:5000
-
-# On PC
-vlc rtp://@:5000
+LUCKFOX_KERNEL_SOURCE=/path/to/exported/sysdrv/source/kernel \
+    python3 -m unittest discover -s tests -v
 ```
 
-### ⚠️ Current Limitation: Kernel VEPU Driver
-The hardware H.264/HEVC encoder (VEPU/RKVENC) requires a kernel driver that **only exists in Rockchip's vendor 5.10 kernel**, not in mainline Linux 7.1 used by this layer.
-
-| Component | Status |
-|-----------|--------|
-| Kernel VEPU/RKVENC driver | ❌ Not in mainline (vendor 5.10 only) |
-| `mpp_service` character device | ❌ Not available |
-| Userspace libraries (MPP, Rockit, RKAIQ, RGA, etc.) | ✅ Provided via recipes |
-| `rkipc` RTSP application | ✅ Recipe added (may work if minimal kernel support exists) |
-| FFmpeg `h264_rkmpp` encoder | ✅ PACKAGECONFIG added (needs kernel driver) |
-
-**Workarounds:**
-1. **Use `rkipc`** - It uses the prebuilt Luckfox SDK libraries and may work with minimal kernel support
-2. **Software encoding** - Add `PACKAGECONFIG:append:pn-ffmpeg = " x264"` (already works with `LICENSE_FLAGS_ACCEPTED = "commercial"`)
-3. **Port the VEPU driver** - Copy from vendor kernel (`drivers/media/platform/rockchip/vepu/`, `rkvenc/`, `mpp_service/`) to mainline 7.1
-
-For now, software encoding with `libx264` at 640×480 @ 15-20 fps with `-preset ultrafast` is the most reliable option on the Cortex-A7.
+These checks require host GCC/make and `dtc`. They validate configuration and DT
+semantics, not target module compilation, boot or acceleration. Before declaring
+an image ready, complete BitBake builds and inspect kernel modules, extlinux,
+GPT/UBI, package manifests and measured partition sizes, then test on each SKU.
 
 ## Logging in
 
-Over the UART (ttyS2), or over the USB port: the board presents itself to the host as a CDC-ACM serial device (`/dev/ttyACM*` on Linux, a COM port on Windows) carrying its own login prompt.
+The new product image leaves Yocto's default root account locked. Configure
+credentials before deployment; for a deliberately insecure bench-only image,
+explicitly select Yocto's `allow-empty-password empty-root-password` features.
+
+The existing **core-image** debug builds, not `luckfox-image`, retain their
+original password and OpenSSH additions. Over UART (`ttyS2`) or the USB CDC-ACM
+serial gadget:
 
 ```
 login: root
@@ -139,7 +229,8 @@ password: password
 Change the password (in `core-image-%.bbappend`, or with the `passwd` command) before deploying anywhere it matters. The USB port is also the power port, so anyone who can plug in a cable can reach that login prompt.
 
 ## Extras
-`fastfetch` is included for a Linux overview.
+`fastfetch` is included in the existing core-image debug builds, not forced into
+the NAND-oriented product image.
 
 ## Configure RTL8723BS Wi-Fi
 

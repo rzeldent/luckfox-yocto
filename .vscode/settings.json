@@ -13,7 +13,7 @@
     },
     "bitbake.pathToBitbakeFolder": "${workspaceFolder}/bitbake",
     "bitbake.pathToEnvScript": "${workspaceFolder}/openembedded-core/oe-init-build-env",
-    "bitbake.sdkImage": "core-image-base",
+    "bitbake.sdkImage": "luckfox-image",
     "bitbake.pathToBuildFolder": "${workspaceFolder}/build",
     "bitbake.parseOnSave": false,
     "bitbake.buildConfigurations": [
@@ -22,19 +22,9 @@
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
                 "MACHINE": "luckfox-pico-sd-card",
-                "DISTRO": "luckfox",
+                "DISTRO": "luckfox-project",
                 "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera npu vcodec"
-            }
-        },
-        {
-            "name": "Luckfox Pico (SPI NAND)",
-            "pathToBuildFolder": "${workspaceFolder}/build",
-            "shellEnv": {
-                "MACHINE": "luckfox-pico-spi-nand",
-                "DISTRO": "luckfox",
-                "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera rtl8723bs npu vcodec"
+                "LUCKFOX_FEATURES": "camera npu rga"
             }
         },
         {
@@ -42,9 +32,9 @@
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
                 "MACHINE": "luckfox-pico-plus-sd-card",
-                "DISTRO": "luckfox",
+                "DISTRO": "luckfox-project",
                 "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera npu vcodec"
+                "LUCKFOX_FEATURES": "camera npu rga"
             }
         },
         {
@@ -52,9 +42,9 @@
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
                 "MACHINE": "luckfox-pico-plus-spi-nand",
-                "DISTRO": "luckfox",
+                "DISTRO": "luckfox-project",
                 "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera rtl8723bs npu vcodec"
+                "LUCKFOX_FEATURES": "camera npu rga"
             }
         },
         {
@@ -62,9 +52,9 @@
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
                 "MACHINE": "luckfox-pico-max-sd-card",
-                "DISTRO": "luckfox",
+                "DISTRO": "luckfox-project",
                 "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera npu vcodec"
+                "LUCKFOX_FEATURES": "camera npu rga"
             }
         },
         {
@@ -72,9 +62,9 @@
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
                 "MACHINE": "luckfox-pico-max-spi-nand",
-                "DISTRO": "luckfox",
+                "DISTRO": "luckfox-project",
                 "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera rtl8723bs npu vcodec"
+                "LUCKFOX_FEATURES": "camera npu rga"
             }
         },
         {
@@ -82,9 +72,9 @@
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
                 "MACHINE": "luckfox-pico-mini-sd-card",
-                "DISTRO": "luckfox",
+                "DISTRO": "luckfox-project",
                 "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera npu vcodec"
+                "LUCKFOX_FEATURES": "camera npu rga"
             }
         },
         {
@@ -92,9 +82,9 @@
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
                 "MACHINE": "luckfox-pico-mini-spi-nand",
-                "DISTRO": "luckfox",
+                "DISTRO": "luckfox-project",
                 "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera rtl8723bs npu vcodec"
+                "LUCKFOX_FEATURES": "camera npu rga"
             }
         },
         {
@@ -102,19 +92,9 @@
             "pathToBuildFolder": "${workspaceFolder}/build",
             "shellEnv": {
                 "MACHINE": "luckfox-pico-pi-sd-card",
-                "DISTRO": "luckfox",
+                "DISTRO": "luckfox-project",
                 "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera npu vcodec"
-            }
-        },
-        {
-            "name": "Luckfox Pico Pi (SPI NAND)",
-            "pathToBuildFolder": "${workspaceFolder}/build",
-            "shellEnv": {
-                "MACHINE": "luckfox-pico-pi-spi-nand",
-                "DISTRO": "luckfox",
-                "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera rtl8723bs npu vcodec"
+                "LUCKFOX_FEATURES": "camera npu rga"
             }
         }
     ],

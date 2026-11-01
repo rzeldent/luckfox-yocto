@@ -8,4 +8,7 @@ build/bitbake-cookerdaemon.log
 build/conf/*.txt
 build/conf/template*
 build/workspace
+build/source-check
+build/kernel-config-check
+**/__pycache__/
 **/*.log

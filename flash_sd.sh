@@ -18,7 +18,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # SD card images come from the "-sd-card" machines; the suffix is added if omitted.
-MACHINE="${MACHINE:-luckfox-pico-max-sd-card}"
+MACHINE="${MACHINE:-luckfox-pico-plus-sd-card}"
 DEPLOY_DIR=""
 DEPLOY_DIR_SET=false
 
@@ -115,7 +115,10 @@ discover_image() {
 
     if [[ -z "$IMAGE" ]]; then
         # Prefer the stable symlink, fall back to the newest timestamped file.
-        IMAGE="$DEPLOY_DIR/core-image-base-${MACHINE}.rootfs.wic"
+        IMAGE="$DEPLOY_DIR/luckfox-image-${MACHINE}.rootfs.wic"
+        if [[ ! -e "$IMAGE" ]]; then
+            IMAGE="$DEPLOY_DIR/core-image-base-${MACHINE}.rootfs.wic"
+        fi
         if [[ ! -e "$IMAGE" ]]; then
             IMAGE="$(newest_match "$DEPLOY_DIR/*.rootfs-*.wic")"
         fi
