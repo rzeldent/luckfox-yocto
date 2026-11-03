@@ -23,7 +23,7 @@ python do_luckfox_check_configuration() {
         validate_configuration(
             machine=d.getVar("MACHINE"),
             kernel=d.getVar("LUCKFOX_KERNEL"),
-            drivers=d.getVar("LUCKFOX_FEATURES").split(),
+            features=d.getVar("LUCKFOX_FEATURES").split(),
             image_features=d.getVar("IMAGE_FEATURES").split(),
             allow_proprietary=d.getVar("LUCKFOX_ALLOW_PROPRIETARY_USERSPACE"),
             libc=d.getVar("TCLIBC"),
@@ -43,7 +43,7 @@ python do_luckfox_check_nand_size() {
     import os
     from luckfox_config import nand_capacity
 
-    if not d.getVar("MACHINE").endswith("-spi-nand"):
+    if not bb.utils.contains("LUCKFOX_FEATURES", "spi-nand", True, False, d):
         return
     capacity = nand_capacity(
         d.getVar("LUCKFOX_NAND_SIZE"), d.getVar("LUCKFOX_NAND_ERASE_SIZE"),

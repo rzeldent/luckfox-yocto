@@ -5,6 +5,8 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=6bc538ed5bd9a7fc9398086aedcd7e46"
 inherit kernel
 
 SRC_URI = "git://github.com/LuckfoxTECH/luckfox-pico.git;protocol=https;branch=main;destsuffix=luckfox-sdk \
+           file://0001-kbuild-disable-dangling-pointer-warning.patch \
+           file://0002-fix-wide-enum-constants-for-gcc15.patch \
            file://base.cfg \
            file://camera-on.cfg file://camera-off.cfg \
            file://npu-on.cfg file://npu-off.cfg \
@@ -16,7 +18,7 @@ KERNEL_LOCALVERSION = "-luckfox"
 KERNEL_IMAGETYPE = "zImage"
 KERNEL_CONFIG_COMMAND = "oe_runmake -C ${S} O=${B} olddefconfig"
 DEPENDS += "openssl-native flex-native"
-COMPATIBLE_MACHINE = "^luckfox-pico(-plus|-max|-mini|-pi)?-(sd-card|spi-nand)$"
+COMPATIBLE_MACHINE = "^luckfox-pico(-plus|-max|-mini|-pi)?$"
 
 LUCKFOX_KERNEL_FRAGMENTS = "base.cfg ${@'camera-on.cfg' if bb.utils.contains('LUCKFOX_FEATURES', 'camera', True, False, d) else 'camera-off.cfg'} ${@'npu-on.cfg' if bb.utils.contains('LUCKFOX_FEATURES', 'npu', True, False, d) else 'npu-off.cfg'} ${@'rga-on.cfg' if bb.utils.contains('LUCKFOX_FEATURES', 'rga', True, False, d) else 'rga-off.cfg'}"
 

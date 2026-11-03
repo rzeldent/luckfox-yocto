@@ -18,93 +18,17 @@
     "bitbake.parseOnSave": false,
     "bitbake.buildConfigurations": [
         {
-            "name": "Luckfox Pico (SD card)",
-            "pathToBuildFolder": "${workspaceFolder}/build",
-            "shellEnv": {
-                "MACHINE": "luckfox-pico-sd-card",
-                "DISTRO": "luckfox-project",
-                "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera npu rga"
-            }
-        },
-        {
-            "name": "Luckfox Pico Plus (SD card)",
-            "pathToBuildFolder": "${workspaceFolder}/build",
-            "shellEnv": {
-                "MACHINE": "luckfox-pico-plus-sd-card",
-                "DISTRO": "luckfox-project",
-                "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera npu rga"
-            }
-        },
-        {
-            "name": "Luckfox Pico Plus (SPI NAND)",
-            "pathToBuildFolder": "${workspaceFolder}/build",
-            "shellEnv": {
-                "MACHINE": "luckfox-pico-plus-spi-nand",
-                "DISTRO": "luckfox-project",
-                "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera npu rga"
-            }
-        },
-        {
-            "name": "Luckfox Pico Max (SD card)",
-            "pathToBuildFolder": "${workspaceFolder}/build",
-            "shellEnv": {
-                "MACHINE": "luckfox-pico-max-sd-card",
-                "DISTRO": "luckfox-project",
-                "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera npu rga"
-            }
-        },
-        {
-            "name": "Luckfox Pico Max (SPI NAND)",
-            "pathToBuildFolder": "${workspaceFolder}/build",
-            "shellEnv": {
-                "MACHINE": "luckfox-pico-max-spi-nand",
-                "DISTRO": "luckfox-project",
-                "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera npu rga"
-            }
-        },
-        {
-            "name": "Luckfox Pico Mini (SD card)",
-            "pathToBuildFolder": "${workspaceFolder}/build",
-            "shellEnv": {
-                "MACHINE": "luckfox-pico-mini-sd-card",
-                "DISTRO": "luckfox-project",
-                "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera npu rga"
-            }
-        },
-        {
-            "name": "Luckfox Pico Mini (SPI NAND)",
-            "pathToBuildFolder": "${workspaceFolder}/build",
-            "shellEnv": {
-                "MACHINE": "luckfox-pico-mini-spi-nand",
-                "DISTRO": "luckfox-project",
-                "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera npu rga"
-            }
-        },
-        {
-            "name": "Luckfox Pico Pi (SD card)",
-            "pathToBuildFolder": "${workspaceFolder}/build",
-            "shellEnv": {
-                "MACHINE": "luckfox-pico-pi-sd-card",
-                "DISTRO": "luckfox-project",
-                "BB_ENV_PASSTHROUGH_ADDITIONS": "LUCKFOX_FEATURES",
-                "LUCKFOX_FEATURES": "camera npu rga"
-            }
+            "name": "Workspace (build/conf/local.conf)",
+            "pathToBuildFolder": "${workspaceFolder}/build"
         }
     ],
-    
+
     "bitbake.disableConfigModification": true,
     "bitbake.disableDevtoolDebugBuild": true,
 
     "files.watcherExclude": {
-    "**/.git/objects/**": true,
-    "**/.git/subtree-cache/**": true,
-    "./build/tmp/**": true
+        "**/.git/objects/**": true,
+        "**/.git/subtree-cache/**": true,
+        "./build/tmp/**": true
     }
 }

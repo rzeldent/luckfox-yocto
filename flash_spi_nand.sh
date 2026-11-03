@@ -32,15 +32,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # RockChip upgrade_tool must be invoked from its own directory so that it finds
 # its config.ini.
-TOOL_DIR="${TOOL_DIR:-/home/rene/repos/luckfox-pico/tools/linux/Linux_Upgrade_Tool}"
+TOOL_DIR="${TOOL_DIR:-$SCRIPT_DIR/../luckfox-pico/tools/linux/Linux_Upgrade_Tool}"
 TOOL_BIN="upgrade_tool"
 
 # The loader (DDR init + usbplug) shipped with the Luckfox SDK. The loaders in
 # rkbin/ are rejected by this chip ("wrong hash of loader").
 LOADER="${LOADER:-/home/rene/repos/luckfox-pico/output/image/download.bin}"
 
-# NAND images come from the "-spi-nand" machines; the suffix is added if omitted.
-MACHINE="${MACHINE:-luckfox-pico-mini-spi-nand}"
+# NAND images use the board machine with the spi-nand feature enabled.
+MACHINE="${MACHINE:-luckfox-pico-mini}"
 DEPLOY_DIR="${DEPLOY_DIR:-$SCRIPT_DIR/build/tmp/deploy/images/${MACHINE}}"
 
 IDBLOADER_FILE=""
@@ -104,8 +104,8 @@ Options:
 Examples:
   sudo $0
   sudo $0 --no-erase
-  sudo $0 -m luckfox-pico-max-spi-nand
-  sudo $0 --deploy-dir build/tmp/deploy/images/luckfox-pico-mini-spi-nand
+  sudo $0 -m luckfox-pico-max
+  sudo $0 --deploy-dir build/tmp/deploy/images/luckfox-pico-mini
 EOF
 }
 
@@ -131,8 +131,12 @@ parse_args() {
             *) die "Unknown option: $1 (try --help)" ;;
         esac
     done
-    
-    [[ "$MACHINE" == *-spi-nand ]] || MACHINE="${MACHINE}-spi-nand"
+
+    case "$MACHINE" in
+        luckfox-pico|luckfox-pico-pi)
+            die "SPI NAND flashing is unsupported for $MACHINE; select luckfox-pico-plus, luckfox-pico-max or luckfox-pico-mini."
+            ;;
+    esac
 
     # Recompute DEPLOY_DIR if not explicitly set and MACHINE changed
     if [[ -z "${DEPLOY_DIR_SET:-}" ]]; then

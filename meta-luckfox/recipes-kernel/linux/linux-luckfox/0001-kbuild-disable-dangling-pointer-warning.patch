@@ -1,0 +1,28 @@
+From: Copilot <223556219+Copilot@users.noreply.github.com>
+Subject: [PATCH] kbuild: disable dangling-pointer false positives
+
+Newer GCC versions diagnose temporary stack-backed list entries in semaphore
+wait queues and memory compaction. Those entries are removed before their
+stack frames return, but the compiler cannot track that lifetime across the
+list helpers and scheduling operations.
+
+Disable only this diagnostic, using the compiler capability check so older
+GCC and Clang remain supported. Keep CONFIG_WERROR for other diagnostics.
+
+Upstream-Status: Inappropriate [vendor kernel compiler compatibility]
+Signed-off-by: Copilot <223556219+Copilot@users.noreply.github.com>
+---
+ Makefile | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/Makefile b/Makefile
+--- a/Makefile
++++ b/Makefile
+@@ -771,6 +771,7 @@ KBUILD_CFLAGS	+= $(call cc-disable-warning,frame-address,)
+ KBUILD_CFLAGS	+= $(call cc-disable-warning, format-truncation)
+ KBUILD_CFLAGS	+= $(call cc-disable-warning, format-overflow)
+ KBUILD_CFLAGS	+= $(call cc-disable-warning, address-of-packed-member)
++KBUILD_CFLAGS	+= $(call cc-disable-warning, dangling-pointer)
+ 
+ ifdef CONFIG_CC_OPTIMIZE_FOR_PERFORMANCE
+ KBUILD_CFLAGS += -O2

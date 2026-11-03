@@ -5,27 +5,34 @@ Source-oriented Yocto configuration for Luckfox RV1103/RV1106 boards.
 ## Description
 
 The pinned `meta-rv110x` BSP is extended by the repository-owned `meta-luckfox`
-layer. `luckfox-project` selects the Luckfox SDK's Linux 5.10.160 **original
-kernel source**, not SDK `.ko` files. The existing patched mainline provider
-remains selectable with `LUCKFOX_KERNEL = "mainline"`.
+layer. `luckfox-project` selects Linux 7.3.1 stable source with the BSP's RV110x
+patches and source-built camera/NPU drivers. RGA is not supported by this
+mainline profile. The Luckfox SDK's Linux 5.10.160 original kernel source remains
+available with `LUCKFOX_KERNEL = "vendor"`; neither provider imports SDK `.ko`
+files.
 
-**Current verification:** source Kconfig and device-tree checks are available,
-but no Yocto image or target boot has been validated for the new vendor provider.
-Image builds on the current Ubuntu host are blocked by AppArmor's
-unprivileged-user-namespace restriction. An administrator must grant scoped
-BitBake permission; do not disable the sanity check or AppArmor.
+**Current verification:** Linux 7.3.1 kernel and module compilation, SC3336/USB
+gadget package QA, and the Mini camera/NPU/SPI-NAND configuration check have
+passed. No full image or target boot has been validated for this kernel
+migration. BitBake's host sanity checks remain enabled.
+
+The ARM machine-types header generator strips the build directory from its
+generated comment, avoiding build-path leakage in kernel debug source packages.
 
 ## Supported machines
 
-Use a distinct machine and image per board and boot medium. The SDK identifies
-Pico and Pico Plus as **RV1103**, despite the older layer's `rv1106-*` DT names.
+Use one machine per board and select the boot medium with `LUCKFOX_FEATURES`.
+The default boot medium is SD card; add `spi-nand` to build a NAND/UBI image.
+The SDK identifies Pico and Pico Plus as **RV1103**, despite the older layer's
+`rv1106-*` DT names.
 
 | Machine | Board | SoC |
 | --- | --- | --- |
-| `luckfox-pico-sd-card` | Luckfox Pico | RV1103 |
-| `luckfox-pico-plus-sd-card`, `luckfox-pico-plus-spi-nand` | Luckfox Pico Plus | RV1103 |
-| `luckfox-pico-max-sd-card`, `luckfox-pico-max-spi-nand` | Luckfox Pico Max | RV1106 |
-| `luckfox-pico-mini-sd-card`, `luckfox-pico-mini-spi-nand` | Luckfox Pico Mini; NAND requires a populated NAND part | RV1103G |
+| `luckfox-pico` | Luckfox Pico | RV1103 |
+| `luckfox-pico-plus` | Luckfox Pico Plus | RV1103 |
+| `luckfox-pico-max` | Luckfox Pico Max | RV1106 |
+| `luckfox-pico-mini` | Luckfox Pico Mini; NAND requires a populated NAND part | RV1103G |
+| `luckfox-pico-pi` | Luckfox Pico Pi | RV1106 |
 
 Pico Pro and Max share the SDK's `rv1106g-luckfox-pico-pro-max` DT; this is not
 proof of identical installed RAM or NAND capacity. RAM comes from boot-time DDR
@@ -43,12 +50,13 @@ The SDK also contains Pi, Ultra, Zero, WebBee and 86Panel DTs. Pi/Ultra/Zero/
 incorrectly reuses the Pico bootloader, and Pi's SD slot uses a different
 controller. The product image rejects Pi until bootloader/storage integration is
 validated. Pi's vendor kernel DT is included in the source DT tests, **not**
-advertised as a working image. Legacy Pico/Pi NAND machine files are likewise not
-evidence of supported NAND hardware. Do not flash one board's image onto another.
+advertised as a working image. Pico and Pi NAND boot are unsupported. Do not
+flash one board's image onto another.
 
 ### Feature flags (`LUCKFOX_FEATURES`)
 
-`LUCKFOX_FEATURES` selects source kernel drivers. The default is `camera npu rga`.
+`LUCKFOX_FEATURES` selects optional drivers and boot/storage features. The
+default is `camera npu`. RGA requires the optional vendor provider.
 Set it in `build/conf/local.conf`, or export it together with
 `BB_ENV_PASSTHROUGH_ADDITIONS=LUCKFOX_FEATURES`. Unknown features fail rather than
 silently producing a different image.
@@ -59,7 +67,8 @@ silently producing a different image.
 | `npu` | Source rknpu driver; does **not** install proprietary inference userspace |
 | `rga` | Source vendor multi-RGA driver; 2D scaling/rotation, **not** video encoding |
 | `rtl8723bs` | Existing source rtw88 driver, mainline NAND builds only; vendor integration is not validated |
-| `nand-mtd` | Existing BSP flag for non-boot NAND exposure; not NAND geometry configuration |
+| `nand-mtd` | Expose populated SPI NAND as MTD while booting from SD |
+| `spi-nand` | Boot from SPI NAND and produce a UBI image; requires verified NAND geometry |
 
 The legacy `vcodec` flag is rejected: the generic mainline/vendor MPP driver does
 not bind the RV110x encoder. Use `rga` for source-built graphics acceleration.
@@ -68,10 +77,10 @@ and disable the relevant DT functions. Disabling camera also avoids its CMA
 request when no other DMA feature is selected. `LUCKFOX_CMA_SIZE` defaults to 24M
 with camera/NPU/RGA, or 0M without them; tune it against actual RAM and workloads.
 
-RTL8723BS and SD boot cannot occupy the same SDMMC bus. Their combination fails
-configuration validation. The vendor DT adaptation makes the normal slot
-removable, disables the SDK FIQ console in favor of `ttyS2`, and removes the
-SDK's hard-coded `/dev/mmcblk1p7` boot argument so extlinux selects the image root.
+RTL8723BS and SD boot cannot occupy the same SDMMC bus, so using RTL8723BS
+requires the `spi-nand` boot feature. The vendor DT adaptation makes the normal
+slot removable, disables the SDK FIQ console in favor of `ttyS2`, and removes
+the SDK's hard-coded `/dev/mmcblk1p7` boot argument so extlinux selects the image root.
 
 ### Optional image packages
 
@@ -119,29 +128,40 @@ in this checkout; no main-checkout devtool workspace is used:
 ```sh
 git submodule update --init
 . openembedded-core/oe-init-build-env build
-MACHINE=luckfox-pico-plus-sd-card bitbake luckfox-image
+MACHINE=luckfox-pico-plus bitbake luckfox-image
 ```
 
-For a NAND-constrained image, use `LUCKFOX_FEATURES = ""` and
+For a NAND-constrained image, use `LUCKFOX_FEATURES = "spi-nand"` and
 `LUCKFOX_IMAGE_FEATURES = ""`, then add only the required drivers and tools.
 No FFmpeg, Wi-Fi or streaming packages are appended globally.
 
 NAND requires **verified physical** page size, eraseblock size and chip capacity
 in decimal bytes. The Pico Plus SDK's partition totals alone do not establish
 these. Obtain the actual NAND part marking and, from a booted board, `mtdinfo -a`
-or the matching kernel MTD identification. Set:
+or the matching kernel MTD identification. Board-specific defaults select 128 MiB
+for Mini/Plus and 256 MiB for Pro/Max, with 2,048-byte pages and 131,072-byte
+eraseblocks. Pico and Pi receive no NAND defaults. For a different fitted part,
+override the geometry in `build/conf/local.conf`:
 
 ```bitbake
-# Examples only, NOT confirmed Pico Plus geometry:
+# Example override for a fitted 128 MiB part:
 # LUCKFOX_NAND_PAGE_SIZE = "2048"
 # LUCKFOX_NAND_ERASE_SIZE = "131072"
 # LUCKFOX_NAND_SIZE = "134217728"
 ```
 
-Only after confirming geometry:
+Only after confirming geometry, set the machine and feature in
+`build/conf/local.conf`:
+
+```bitbake
+MACHINE = "luckfox-pico-plus"
+LUCKFOX_FEATURES = "camera npu rga spi-nand"
+```
+
+Then build:
 
 ```sh
-MACHINE=luckfox-pico-plus-spi-nand bitbake luckfox-image
+bitbake luckfox-image
 ```
 
 NAND flash readiness is **blocked pending that confirmation**. The upstream
@@ -152,6 +172,12 @@ physical blocks on a 128MiB/128KiB-eraseblock part (44 on a 256MiB part), reserv
 20 bad-block slots per 1024 physical blocks plus four UBI overhead blocks. The final `.ubi`
 must fit the remaining raw partition budget. Existing bad blocks and ECC still
 need target confirmation. SPL and U-Boot must fit their own partitions as well.
+
+NAND defaults follow the board machine, not just RV1103/RV1106: Pi uses eMMC
+and is not a NAND target. Explicit geometry assignments in `local.conf` take
+precedence over the defaults. Verify the fitted part before flashing; the Mini B
+boot log confirms its 128 MiB capacity, 2,048-byte pages and 131,072-byte
+eraseblocks, but other boards still require target confirmation.
 
 SD uses the BSP GPT WIC layout: loader1 at sector 64, U-Boot at sector 16384 and
 ext4 rootfs at sector 32768. SD images include the existing first-boot rootfs
@@ -166,9 +192,30 @@ delivery, inspect actual image formats/layouts, measure sizes and generate
 VS Code's default task is **Build luckfox-image**. Existing core image tasks
 remain available as larger debug-oriented images.
 
+For USB flashing, run **Flash SPI NAND (upgrade_tool)** and select the target
+board using the same picker as the SD task and confirm the tooling directory (default:
+`../luckfox-pico/tools/linux/Linux_Upgrade_Tool`, relative to the workspace).
+The script also defaults to this sibling SDK directory, relative to its own
+location when run directly. The task uses the
+selected board's deploy directory to discover the NAND images (`.ubi` and NAND
+bootloaders); no separate NAND board selection is needed. Pico and Pi are rejected
+as unsupported NAND targets. The task uses the script's default USB loader,
+`/home/rene/repos/luckfox-pico/output/image/download.bin`. This SDK loader must
+match the target hardware; it is not selected by the Yocto machine name. For a
+different loader, run `flash_spi_nand.sh --machine <machine> --loader <path>`
+directly. Connect only the board to be flashed in MaskROM mode (hold BOOT,
+connect USB, then release BOOT).
+
 The NAND task erases the whole SPI NAND before writing, so anything already stored on it is lost. That erase is not optional in practice: a `.ubi` is smaller than its partition, and UBI refuses to attach if any block still holds another image's sequence number.
 
 ## Hardware media and source limitations
+
+The mainline RV110x device tree supplies per-bank IOC references and stable GPIO
+aliases, including across RV1103's missing GPIO2 bank. Linux 7.3 pinctrl requires
+these mappings. Without them UART and SPI NAND probing fail with `-EINVAL`, UBI
+cannot find `rootfs`, and serial output can stop at `clk: Disabling unused clocks`.
+Rebuild the image and reflash its matching NAND artifacts after changing this
+device tree; disabling unused clocks is not a storage or pinctrl fix.
 
 The SDK at revision `824b817f889c2cbff1d48fcdb18ab494a68f69d1` has original
 C source for rknpu, CIF, ISP, camera sensors and multi-RGA. The vendor recipe
@@ -190,6 +237,21 @@ userspace engine. No camera capture, inference, scaling, encoding or frame-rate
 claim is made without target execution.
 
 ### Validation
+
+The vendor kernel includes compatibility patches for newer GCC: a targeted
+`dangling-pointer` suppression for temporary kernel lists, and correctly typed
+workqueue/WireGuard constants for GCC 15. Other compiler warnings remain fatal
+when `CONFIG_WERROR` is enabled. The distro sets glibc's minimum supported kernel
+to 5.10 for the vendor provider (5.15 for mainline).
+
+The vendor kernel builds the USB serial gadget's configfs, libcomposite and ACM
+support in. The project therefore makes `usb-gadget-serial` depend on
+`kernel-base` instead of nonexistent module packages for that provider; mainline
+retains the module dependencies.
+
+For the SC3336 camera sensor, vendor builds use the module built from the vendor
+kernel's own source. Only mainline builds use the external `sc3336-driver`
+recipe, which targets newer kernel APIs.
 
 Run policy tests without a full Yocto build:
 
@@ -216,6 +278,11 @@ GPT/UBI, package manifests and measured partition sizes, then test on each SKU.
 The new product image leaves Yocto's default root account locked. Configure
 credentials before deployment; for a deliberately insecure bench-only image,
 explicitly select Yocto's `allow-empty-password empty-root-password` features.
+
+The local bench configuration overrides the locked account using `extrausers`
+and a salted password hash in `build/conf/local.conf`. Rebuild and reflash the
+image for credential changes to take effect; replace bench credentials before
+deployment. This does not change the product image's locked default.
 
 The existing **core-image** debug builds, not `luckfox-image`, retain their
 original password and OpenSSH additions. Over UART (`ttyS2`) or the USB CDC-ACM
@@ -281,4 +348,4 @@ ubidetach -m 0 2>/dev/null || true      # detach UBI first if it's attached
 flash_erase -N /dev/mtd0 0 0            # whole chip, don't skip bad blocks
 ```
 
-From the U-Boot console instead: `mtd erase.dontskipbad spi-nand0`.
+From the U-Boot console instead: `mtd erase spi-nand0`.

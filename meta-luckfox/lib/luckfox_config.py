@@ -3,32 +3,32 @@
 from pathlib import Path
 
 
-DRIVERS = frozenset(("camera", "npu", "rga", "vcodec", "rtl8723bs", "nand-mtd"))
+FEATURES = frozenset(("camera", "npu", "rga", "vcodec", "rtl8723bs", "nand-mtd", "spi-nand"))
 
 
 def nand_capacity(nand_size, erase_size, rootfs_offset, reserved_blocks):
     return int(nand_size) - int(rootfs_offset) - int(erase_size) * int(reserved_blocks)
 
 
-def validate_configuration(*, machine, kernel, drivers, image_features,
+def validate_configuration(*, machine, kernel, features, image_features,
                            allow_proprietary, libc, page_size="", erase_size="",
                            nand_size="", rootfs_offset="1179648", reserved_blocks="24"):
     if kernel not in ("vendor", "mainline"):
         raise ValueError("LUCKFOX_KERNEL must be vendor or mainline")
-    unknown = set(drivers) - DRIVERS
+    unknown = set(features) - FEATURES
     if unknown:
         raise ValueError("Unknown LUCKFOX_FEATURES: " + " ".join(sorted(unknown)))
-    if machine.startswith("luckfox-pico-pi-"):
+    if machine == "luckfox-pico-pi":
         raise ValueError("Pico Pi kernel DT is available, but its eMMC/alternate-SD bootloader integration is not validated")
-    if "rtl8723bs" in drivers and machine.endswith("-sd-card"):
+    if "rtl8723bs" in features and "spi-nand" not in features:
         raise ValueError("rtl8723bs occupies the SD boot bus; use NAND or omit rtl8723bs")
-    if "vcodec" in drivers:
+    if "vcodec" in features:
         raise ValueError("RV110x encoder requires opaque SDK kernel payloads, not the generic source MPP driver; use rga for source-built 2D acceleration")
-    if kernel == "mainline" and "rga" in drivers:
+    if kernel == "mainline" and "rga" in features:
         raise ValueError("RV110x RGA2 requires the source vendor driver; select LUCKFOX_KERNEL = vendor")
-    if kernel == "vendor" and "rtl8723bs" in drivers:
+    if kernel == "vendor" and "rtl8723bs" in features:
         raise ValueError("The packaged rtw88 driver targets mainline; vendor-kernel Wi-Fi integration is not validated")
-    if "npu-runtime" in image_features and "npu" not in drivers:
+    if "npu-runtime" in image_features and "npu" not in features:
         raise ValueError("npu-runtime requires the npu driver feature")
     if "npu-runtime" in image_features and kernel != "vendor":
         raise ValueError("The RKNN mini runtime requires the vendor DMA-heap driver ABI")
@@ -39,8 +39,8 @@ def validate_configuration(*, machine, kernel, drivers, image_features,
             raise ValueError("Proprietary userspace requires LUCKFOX_ALLOW_PROPRIETARY_USERSPACE = 1")
         if libc != "glibc":
             raise ValueError("Proprietary runtime packages require TCLIBC = glibc")
-    if machine.endswith("-spi-nand"):
-        if machine.startswith(("luckfox-pico-pi-", "luckfox-pico-spi-")):
+    if "spi-nand" in features:
+        if machine not in ("luckfox-pico-plus", "luckfox-pico-max", "luckfox-pico-mini"):
             raise ValueError("This board has no SDK-supported NAND boot configuration")
         if not page_size or not erase_size or not nand_size:
             raise ValueError("Set verified LUCKFOX_NAND_PAGE_SIZE, LUCKFOX_NAND_ERASE_SIZE and LUCKFOX_NAND_SIZE in bytes")

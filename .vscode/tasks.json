@@ -39,40 +39,45 @@
         {
             "label": "Write SD card (bmaptool)",
             "type": "shell",
-            "command": "sudo ${workspaceFolder}/flash_sd.sh --machine ${input:machineSdCard} --device ${input:device}",
+            "command": "sudo ${workspaceFolder}/flash_sd.sh --machine ${input:board} --device ${input:device}",
             "problemMatcher": []
         },
         {
             "label": "Flash SPI NAND (upgrade_tool)",
-            "type": "shell",
-            "command": "sudo ${workspaceFolder}/flash_spi_nand.sh --machine ${input:machineSpiNand}",
+            "type": "process",
+            "command": "sudo",
+            "args": [
+                "${workspaceFolder}/flash_spi_nand.sh",
+                "--machine",
+                "${input:board}",
+                "--tool-dir",
+                "${input:nandToolDir}"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
             "problemMatcher": []
         }
     ],
     "inputs": [
         {
-            "id": "machineSdCard",
+            "id": "board",
             "type": "pickString",
-            "description": "SD card machine to write",
+            "description": "Board machine to write",
             "options": [
-                "luckfox-pico-sd-card",
-                "luckfox-pico-plus-sd-card",
-                "luckfox-pico-max-sd-card",
-                "luckfox-pico-mini-sd-card",
-                "luckfox-pico-pi-sd-card"
+                "luckfox-pico",
+                "luckfox-pico-plus",
+                "luckfox-pico-max",
+                "luckfox-pico-mini",
+                "luckfox-pico-pi"
             ],
-            "default": "luckfox-pico-plus-sd-card"
+            "default": "luckfox-pico-mini"
         },
         {
-            "id": "machineSpiNand",
-            "type": "pickString",
-            "description": "SPI NAND machine to flash",
-            "options": [
-                "luckfox-pico-plus-spi-nand",
-                "luckfox-pico-max-spi-nand",
-                "luckfox-pico-mini-spi-nand"
-            ],
-            "default": "luckfox-pico-plus-spi-nand"
+            "id": "nandToolDir",
+            "type": "promptString",
+            "description": "Directory containing upgrade_tool and config.ini (relative to workspace or absolute)",
+            "default": "../luckfox-pico/tools/linux/Linux_Upgrade_Tool"
         },
         {
             "id": "device",

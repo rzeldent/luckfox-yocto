@@ -1,0 +1,54 @@
+From: Copilot <223556219+Copilot@users.noreply.github.com>
+Subject: [PATCH] workqueue, wireguard: keep wide constants outside enums
+
+GCC 15 gives constants in enums containing wide values the enum's underlying
+type. On 32-bit ARM, the workqueue mask then promotes pointer arithmetic to
+64 bits, and WireGuard's small timer constants acquire a 64-bit type.
+
+Move the wide constants to macros so pointer masks remain unsigned long and
+timer constants remain int. Preserve their values and keep compiler diagnostics
+enabled.
+
+Upstream-Status: Inappropriate [vendor kernel compiler compatibility]
+Signed-off-by: Copilot <223556219+Copilot@users.noreply.github.com>
+---
+ drivers/net/wireguard/messages.h | 5 +++--
+ include/linux/workqueue.h        | 3 ++-
+ 2 files changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/include/linux/workqueue.h b/include/linux/workqueue.h
+--- a/include/linux/workqueue.h
++++ b/include/linux/workqueue.h
+@@ -86,7 +86,6 @@ enum {
+ 
+ 	/* convenience constants */
+ 	WORK_STRUCT_FLAG_MASK	= (1UL << WORK_STRUCT_FLAG_BITS) - 1,
+-	WORK_STRUCT_WQ_DATA_MASK = ~WORK_STRUCT_FLAG_MASK,
+ 	WORK_STRUCT_NO_POOL	= (unsigned long)WORK_OFFQ_POOL_NONE << WORK_OFFQ_POOL_SHIFT,
+ 
+ 	/* bit mask for work_busy() return values */
+@@ -98,6 +97,8 @@ enum {
+ 	WORKER_DESC_LEN		= 24,
+ };
+ 
++#define WORK_STRUCT_WQ_DATA_MASK (~(unsigned long)WORK_STRUCT_FLAG_MASK)
++
+ struct work_struct {
+ 	atomic_long_t data;
+ 	struct list_head entry;
+diff --git a/drivers/net/wireguard/messages.h b/drivers/net/wireguard/messages.h
+--- a/drivers/net/wireguard/messages.h
++++ b/drivers/net/wireguard/messages.h
+@@ -37,9 +37,10 @@ enum counter_values {
+ 	COUNTER_WINDOW_SIZE = COUNTER_BITS_TOTAL - COUNTER_REDUNDANT_BITS
+ };
+ 
++#define REKEY_AFTER_MESSAGES (1ULL << 60)
++#define REJECT_AFTER_MESSAGES (U64_MAX - COUNTER_WINDOW_SIZE - 1)
++
+ enum limits {
+-	REKEY_AFTER_MESSAGES = 1ULL << 60,
+-	REJECT_AFTER_MESSAGES = U64_MAX - COUNTER_WINDOW_SIZE - 1,
+ 	REKEY_TIMEOUT = 5,
+ 	REKEY_TIMEOUT_JITTER_MAX_JIFFIES = HZ / 3,
+ 	REKEY_AFTER_TIME = 120,
